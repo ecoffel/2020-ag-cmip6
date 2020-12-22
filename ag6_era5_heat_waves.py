@@ -8,23 +8,19 @@ import os, sys, pickle, gzip
 import datetime
 import geopy.distance
 import xarray as xr
+import xesmf as xe
 import cartopy.crs as ccrs
+import glob
 
-import warnings
-warnings.filterwarnings('ignore')
+dirAgData = '/dartfs-hpc/rc/lab/C/CMIG/ecoffel/data/projects/ag-land-climate'
+dirEra5 = '/dartfs-hpc/rc/lab/C/CMIG/ERA5'
 
-dataDirDiscovery = '/dartfs-hpc/rc/lab/C/CMIG/ecoffel/data/projects/ag-land-climate'
+# dirAgData = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Personal-F20/edcoffel-F20/data/projects/ag-land-climate'
+# dirEra5 = '/home/edcoffel/drive/MAX-Filer/Research/Climate-02/Data-02-edcoffel-F20/ERA5'
 
-heatwave_pct = 90
+years = [1979, 2019]
 
-crop = sys.argv[1]
-wxData = sys.argv[2]
-
-years = [int(sys.argv[3]), int(sys.argv[4])]
-
-# load the sacks crop calendars
-
-sacksMaizeNc = xr.open_dataset('%s/sacks/Maize.crop.calendar.fill.nc'%dataDirDiscovery)
+sacksMaizeNc = xr.open_dataset('%s/sacks/Maize.crop.calendar.fill.nc'%dirAgData)
 sacksStart = sacksMaizeNc['plant'].values
 sacksStart = np.roll(sacksStart, -int(sacksStart.shape[1]/2), axis=1)
 sacksStart[sacksStart < 0] = np.nan
@@ -35,190 +31,68 @@ sacksEnd[sacksEnd < 0] = np.nan
 sacksLat = np.linspace(90, -90, 360)
 sacksLon = np.linspace(0, 360, 720)
 
-# days per year above heatwave_pct
-heatwave_days = [] 
+era5_mx2t_quantiles = xr.open_dataset('era5_mx2t_quantiles.nc')
+era5_mx2t_quantiles.load()
 
-# for y, year in enumerate(range(years[0], years[1]+1)):
-#     print('processing year %d for %s...'%(year, crop))
+lat = era5_mx2t_quantiles.latitude.values
+lon = era5_mx2t_quantiles.longitude.values
 
-#     if wxData == 'cpc':
-#         dsMax = xr.open_dataset('/dartfs-hpc/rc/lab/C/CMIG/CPC/tmax/tmax.%d.nc'%year, decode_cf=False)
-#         dims = dsMax.dims
-#         startingDate = datetime.datetime(1900, 1, 1, 0, 0, 0)
-#         tDt = []
+# regrid sacks data
+regridMesh = xr.Dataset({'lat': (['lat'], lat),
+                         'lon': (['lon'], lon),})
 
-#         for curTTime in dsMax.time:
-#             delta = datetime.timedelta(hours=int(curTTime.values))
-#             tDt.append(startingDate + delta)
-#         dsMax['time'] = tDt
-        
-#         dsMin = xr.open_dataset('/dartfs-hpc/rc/lab/C/CMIG/CPC/tmin/tmin.%d.nc'%year, decode_cf=False)
-#         dims = dsMin.dims
-#         startingDate = datetime.datetime(1900, 1, 1, 0, 0, 0)
-#         tDt = []
+regridder_start = xe.Regridder(xr.DataArray(data=sacksStart, dims=['lat', 'lon'], coords={'lat':sacksLat, 'lon':sacksLon}), regridMesh, 'bilinear')
+regridder_end = xe.Regridder(xr.DataArray(data=sacksEnd, dims=['lat', 'lon'], coords={'lat':sacksLat, 'lon':sacksLon}), regridMesh, 'bilinear')
 
-#         for curTTime in dsMin.time:
-#             delta = datetime.timedelta(hours=int(curTTime.values))
-#             tDt.append(startingDate + delta)
-#         dsMin['time'] = tDt
-        
-#         # load previous year
-#         dsMaxLastYear = xr.open_dataset('/dartfs-hpc/rc/lab/C/CMIG/CPC/tmax/tmax.%d.nc'%(year-1), decode_cf=False)
-        
-#         dims = dsMaxLastYear.dims
-#         startingDate = datetime.datetime(1900, 1, 1, 0, 0, 0)
-#         tDt = []
+sacksStart_regrid = regridder_start(sacksStart)
+sacksEnd_regrid = regridder_end(sacksEnd)
 
-#         for curTTime in dsMaxLastYear.time:
-#             delta = datetime.timedelta(hours=int(curTTime.values))
-#             tDt.append(startingDate + delta)
-#         dsMaxLastYear['time'] = tDt
-        
-#         dsMinLastYear = xr.open_dataset('/dartfs-hpc/rc/lab/C/CMIG/CPC/tmin/tmin.%d.nc'%(year-1), decode_cf=False)
-        
-#         dims = dsMinLastYear.dims
-#         startingDate = datetime.datetime(1900, 1, 1, 0, 0, 0)
-#         tDt = []
+heatwave_days = np.full([lat.size, lon.size, len(range(1979, 2018+1)), era5_mx2t_quantiles.mx2t.shape[0]], np.nan)
+growing_season_len = np.full([lat.size, lon.size], np.nan)
 
-#         for curTTime in dsMinLastYear.time:
-#             delta = datetime.timedelta(hours=int(curTTime.values))
-#             tDt.append(startingDate + delta)
-#         dsMinLastYear['time'] = tDt
-        
-#     elif wxData == 'era5':
-        dsMax = xr.open_dataset('/dartfs-hpc/rc/lab/C/CMIG/ERA5/daily/tasmax_%d.nc'%year, decode_cf=False)
-        dims = dsMax.dims
-        startingDate = datetime.datetime(year, 1, 1, 0, 0, 0)
-        tDt = []
+nnLen = len(np.where(~np.isnan(np.reshape(sacksStart_regrid, [sacksStart_regrid.size, 1])))[0])
 
-        for curTTime in dsMax.time:
-            delta = datetime.timedelta(days=int(curTTime.values))
-            tDt.append(startingDate + delta)
-        dsMax['time'] = tDt
-        dsMax['mx2t'] = dsMax['mx2t'] - 273.15
-        
-#         dsMin = xr.open_dataset('/dartfs-hpc/rc/lab/C/CMIG/ERA5/daily/tasmin_%d.nc'%year, decode_cf=False)
-#         dims = dsMin.dims
-#         startingDate = datetime.datetime(year, 1, 1, 0, 0, 0)
-#         tDt = []
-
-#         for curTTime in dsMin.time:
-#             delta = datetime.timedelta(days=int(curTTime.values))
-#             tDt.append(startingDate + delta)
-#         dsMin['time'] = tDt
-#         dsMin['mn2t'] = dsMin['mn2t'] - 273.15
-        
-        
-        # load previous year
-        dsMaxLastYear = xr.open_dataset('/dartfs-hpc/rc/lab/C/CMIG/ERA5/daily/tasmax_%d.nc'%(year-1), decode_cf=False)
-        
-        dims = dsMaxLastYear.dims
-        startingDate = datetime.datetime(year-1, 1, 1, 0, 0, 0)
-        tDt = []
-
-        for curTTime in dsMaxLastYear.time:
-            delta = datetime.timedelta(days=int(curTTime.values))
-            tDt.append(startingDate + delta)
-        dsMaxLastYear['time'] = tDt
-        dsMaxLastYear['mx2t'] = dsMaxLastYear['mx2t'] - 273.15
-        
-#         dsMinLastYear = xr.open_dataset('/dartfs-hpc/rc/lab/C/CMIG/ERA5/daily/tasmin_%d.nc'%(year-1), decode_cf=False)
-        
-#         dims = dsMinLastYear.dims
-#         startingDate = datetime.datetime(year-1, 1, 1, 0, 0, 0)
-#         tDt = []
-
-#         for curTTime in dsMinLastYear.time:
-#             delta = datetime.timedelta(days=int(curTTime.values))
-#             tDt.append(startingDate + delta)
-#         dsMinLastYear['time'] = tDt
-#         dsMinLastYear['mn2t'] = dsMinLastYear['mn2t'] - 273.15
-            
+for y, year in enumerate(range(1980, 2018+1)):
+    print('year %d'%year)
+    dsMax = xr.open_dataset('%s/daily/tasmax_%d.nc'%(dirEra5, year))
     dsMax.load()
-#     dsMin.load()
-    dsMaxLastYear.load()
-#     dsMinLastYear.load()
+    dsMax['mx2t'] -= 273.15
     
-    if wxData == 'era5':
-        lat = dsMax.latitude.values
-        lon = dsMax.longitude.values
-        tmax = dsMax.mx2t
-#         tmin = dsMin.mn2t
-        tmaxLastYear = dsMaxLastYear.mx2t
-#         tminLastYear = dsMinLastYear.mn2t
-    elif wxData == 'cpc':
-        lat = dsMax.lat.values
-        lon = dsMax.lon.values
-        tmax = dsMax.tmax
-        tmin = dsMin.tmin
-        tmaxLastYear = dsMaxLastYear.tmax
-        tminLastYear = dsMinLastYear.tmin
+    dsMaxLast = xr.open_dataset('%s/daily/tasmax_%d.nc'%(dirEra5, year-1))
+    dsMaxLast.load()
+    dsMaxLast['mx2t'] -= 273.15
     
-    if len(heatwave_days) == 0:
-        heatwave_days = np.zeros([len(lat), len(lon)])
+    n = 0
     
     for xlat in range(len(lat)):
-        
-        if xlat % 25 == 0:
-            print('%.0f %% complete'%(xlat/len(lat)*100))
-        
+
         for ylon in range(len(lon)):
-            
-            sacksNearestX = np.where((abs(sacksLat-lat[xlat]) == np.nanmin(abs(sacksLat-lat[xlat]))))[0][0]
-            sacksNearestY = np.where((abs(sacksLon-lon[ylon]) == np.nanmin(abs(sacksLon-lon[ylon]))))[0][0]
-            
-            growingSeasonLen = 0
 
-            if ~np.isnan(sacksStart[sacksNearestX,sacksNearestY]) and ~np.isnan(sacksEnd[sacksNearestX,sacksNearestY]):
-                
+            if ~np.isnan(sacksStart_regrid[xlat, ylon]) and ~np.isnan(sacksEnd_regrid[xlat, ylon]):
+
+                if n % 30000 == 0:
+                    print('%.0f %% complete'%(n/(nnLen)*100))
+
                 # in southern hemisphere when planting happens in fall and harvest happens in spring
-                if sacksStart[sacksNearestX,sacksNearestY] > sacksEnd[sacksNearestX,sacksNearestY]:
-                    curTmax = xr.concat([tmaxLastYear[int(sacksStart[sacksNearestX,sacksNearestY]):, xlat, ylon], \
-                                         tmax[:int(sacksEnd[sacksNearestX,sacksNearestY]), xlat, ylon]], dim='time')
-                    
-                    curTmin = xr.concat([tminLastYear[int(sacksStart[sacksNearestX,sacksNearestY]):, xlat, ylon], \
-                                         tmin[:int(sacksEnd[sacksNearestX,sacksNearestY]), xlat, ylon]], dim='time')
-                    
-                    growingSeasonLen = (365-int(sacksStart[sacksNearestX,sacksNearestY])) + int(sacksEnd[sacksNearestX,sacksNearestY])
-                    
+                if sacksStart_regrid[xlat, ylon] > sacksEnd_regrid[xlat, ylon]:
+                    curTmax = xr.concat([dsMaxLast.mx2t[int(sacksStart_regrid[xlat, ylon]):, xlat, ylon], \
+                                         dsMax.mx2t[:int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]], dim='time')
+                    cur_growingSeasonLen = (365-int(sacksStart_regrid[xlat, ylon])) + int(sacksEnd_regrid[xlat, ylon])
+                
                 else:
-                    curTmax = tmax[int(sacksStart[sacksNearestX,sacksNearestY]):int(sacksEnd[sacksNearestX,sacksNearestY]), xlat, ylon]
-                    curTmin = tmin[int(sacksStart[sacksNearestX,sacksNearestY]):int(sacksEnd[sacksNearestX,sacksNearestY]), xlat, ylon]
-                    
-                    growingSeasonLen = int(sacksEnd[sacksNearestX,sacksNearestY]) - int(sacksStart[sacksNearestX,sacksNearestY])
-                
-                # calc seasonal gdd/kdd
-                curYearGdd = (curTmax.where(curTmax > t_low) + curTmin.where(curTmin > t_low))/2-t_low
-                curYearKdd = curTmax.where(curTmax > t_high)-t_high
-                
-                # loop over weeks to get weekly kdd/gdd
-                
-                for w, wInd in enumerate(range(0, growingSeasonLen, 7)):
-                    gddWeekly[xlat, ylon, w] = np.nansum(curYearGdd.values[wInd:wInd+7])
-                    kddWeekly[xlat, ylon, w] = np.nansum(curYearKdd.values[wInd:wInd+7])
-                    
-                curYearGdd = curYearGdd.sum(dim='time')
-                gdd[xlat, ylon] = curYearGdd.values
-                
-                curYearKdd = curYearKdd.sum(dim='time')
-                kdd[xlat, ylon] = curYearKdd.values
+                    curTmax = dsMax.mx2t[int(sacksStart_regrid[xlat, ylon]):int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]
+                    cur_growingSeasonLen = int(sacksEnd_regrid[xlat, ylon]) - int(sacksStart_regrid[xlat, ylon])
+
+                growing_season_len[xlat, ylon] = cur_growingSeasonLen
+                for q in range(era5_mx2t_quantiles.mx2t.shape[0]):
+                    heatwave_days[xlat, ylon, y, q] = np.where(curTmax.values > era5_mx2t_quantiles.mx2t[q, xlat, ylon].values)[0].size
+                n += 1
+    with open('era5_heat_wave_days_%d.dat'%year, 'wb') as f:
+        pickle.dump(heatwave_days, f)
     
-    with gzip.open('%s/kdd-%s-%s-%d.dat'%(dataDirDiscovery, wxData, crop, year), 'wb') as f:
-        pickle.dump(kdd, f)
-
-    with gzip.open('%s/gdd-%s-%s-%d.dat'%(dataDirDiscovery, wxData, crop, year), 'wb') as f:
-        pickle.dump(gdd, f)
-    
-#     with gzip.open('%s/kdd-weekly-%s-%s-%d.dat'%(dataDirDiscovery, wxData, crop, year), 'wb') as f:
-#         pickle.dump(kddWeekly, f)
-
-#     with gzip.open('%s/gdd-weekly-%s-%s-%d.dat'%(dataDirDiscovery, wxData, crop, year), 'wb') as f:
-#         pickle.dump(gddWeekly, f)
-
-    if not os.path.isfile('%s/gdd-kdd-lat-%s.dat'%(dataDirDiscovery, wxData)):
-        with gzip.open('%s/gdd-kdd-lat-%s.dat'%(dataDirDiscovery, wxData), 'wb') as f:
-            pickle.dump(lat, f)
-
-    if not os.path.isfile('%s/gdd-kdd-lon-%s.dat'%(dataDirDiscovery, wxData)):
-        with gzip.open('%s/gdd-kdd-lon-%s.dat'%(dataDirDiscovery, wxData), 'wb') as f:
-            pickle.dump(lon, f)
+    if y == 0:
+        with open('growing_season_len_maize.dat', 'wb') as f:
+            pickle.dump(growing_season_len, f)
+        
+with open('era5_heat_wave_days.dat', 'wb') as f:
+    pickle.dump(heatwave_days, f)
