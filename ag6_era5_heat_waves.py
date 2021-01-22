@@ -18,12 +18,20 @@ dirEra5 = '/dartfs-hpc/rc/lab/C/CMIG/ERA5'
 # dirAgData = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Personal-F20/edcoffel-F20/data/projects/ag-land-climate'
 # dirEra5 = '/home/edcoffel/drive/MAX-Filer/Research/Climate-02/Data-02-edcoffel-F20/ERA5'
 
-maxT = False
-minT = True
+maxT = True
+minT = False
+
+crop = 'Rice'
+
+maxVar = 'mx2t'
+minVar = 'mn2t'
 
 year = int(sys.argv[1])
 
-sacksMaizeNc = xr.open_dataset('%s/sacks/Maize.crop.calendar.fill.nc'%dirAgData)
+# if os.path.isfile('heat_wave_days/era5_heat_wave_days_%d.dat'%year):
+#     sys.exit()
+
+sacksMaizeNc = xr.open_dataset('%s/sacks/%s.crop.calendar.fill.nc'%(dirAgData, crop))
 sacksStart = sacksMaizeNc['plant'].values
 sacksStart = np.roll(sacksStart, -int(sacksStart.shape[1]/2), axis=1)
 sacksStart[sacksStart < 0] = np.nan
@@ -34,14 +42,14 @@ sacksEnd[sacksEnd < 0] = np.nan
 sacksLat = np.linspace(90, -90, 360)
 sacksLon = np.linspace(0, 360, 720)
 
-era5_mx2t_quantiles = xr.open_dataset('era5_mx2t_quantiles.nc')
-era5_mx2t_quantiles.load()
+era5_max_quantiles = xr.open_dataset('era5_mx2t_quantiles.nc')
+era5_max_quantiles.load()
 
-era5_mn2t_quantiles = xr.open_dataset('era5_mn2t_quantiles.nc')
-era5_mn2t_quantiles.load()
+era5_min_quantiles = xr.open_dataset('era5_mn2t_quantiles.nc')
+era5_min_quantiles.load()
 
-lat = era5_mx2t_quantiles.latitude.values
-lon = era5_mx2t_quantiles.longitude.values
+lat = era5_max_quantiles.latitude.values
+lon = era5_max_quantiles.longitude.values
 
 # regrid sacks data
 regridMesh = xr.Dataset({'lat': (['lat'], lat),
@@ -53,30 +61,48 @@ regridder_end = xe.Regridder(xr.DataArray(data=sacksEnd, dims=['lat', 'lon'], co
 sacksStart_regrid = regridder_start(sacksStart)
 sacksEnd_regrid = regridder_end(sacksEnd)
 
-heatwave_days = np.full([lat.size, lon.size, era5_mx2t_quantiles.mx2t.shape[0]], np.nan)
-coldwave_days = np.full([lat.size, lon.size, era5_mx2t_quantiles.mx2t.shape[0]], np.nan)
+heatwave_days = np.full([lat.size, lon.size, era5_max_quantiles[maxVar].shape[0]], np.nan)
+coldwave_days = np.full([lat.size, lon.size, era5_max_quantiles[maxVar].shape[0]], np.nan)
 growing_season_len = np.full([lat.size, lon.size], np.nan)
 
 nnLen = len(np.where(~np.isnan(np.reshape(sacksStart_regrid, [sacksStart_regrid.size, 1])))[0])
 
 print('year %d'%year)
 if maxT:
-    dsMax = xr.open_dataset('%s/daily/tasmax_%d.nc'%(dirEra5, year))
-    dsMax.load()
-    dsMax['mx2t'] -= 273.15
+    if maxVar == 'mx2t':
+        dsMax = xr.open_dataset('%s/daily/tasmax_%d.nc'%(dirEra5, year))
+        dsMax.load()
 
-    dsMaxLast = xr.open_dataset('%s/daily/tasmax_%d.nc'%(dirEra5, year-1))
-    dsMaxLast.load()
-    dsMaxLast['mx2t'] -= 273.15
+        dsMaxLast = xr.open_dataset('%s/daily/tasmax_%d.nc'%(dirEra5, year-1))
+        dsMaxLast.load()
+        
+        dsMax['mx2t'] -= 273.15
+        dsMaxLast['mx2t'] -= 273.15
+    elif maxVar == 'tw':
+        dsMax = xr.open_dataset('%s/daily/tw_max_%d.nc'%(dirEra5, year))
+        dsMax.load()
+
+        dsMaxLast = xr.open_dataset('%s/daily/tw_max_%d.nc'%(dirEra5, year-1))
+        dsMaxLast.load()
 
 if minT:
-    dsMin = xr.open_dataset('%s/daily/tasmin_%d.nc'%(dirEra5, year))
-    dsMin.load()
-    dsMin['mn2t'] -= 273.15
+    
+    if minVar == 'mn2t':
+        dsMin = xr.open_dataset('%s/daily/tasmin_%d.nc'%(dirEra5, year))
+        dsMin.load()
 
-    dsMinLast = xr.open_dataset('%s/daily/tasmin_%d.nc'%(dirEra5, year-1))
-    dsMinLast.load()
-    dsMinLast['mn2t'] -= 273.15
+        dsMinLast = xr.open_dataset('%s/daily/tasmin_%d.nc'%(dirEra5, year-1))
+        dsMinLast.load()
+        
+        dsMin['mn2t'] -= 273.15
+        dsMinLast['mn2t'] -= 273.15
+    elif minVar == 'tw':
+        dsMin = xr.open_dataset('%s/daily/tw_min_%d.nc'%(dirEra5, year))
+        dsMin.load()
+    
+        dsMinLast = xr.open_dataset('%s/daily/tw_min_%d.nc'%(dirEra5, year-1))
+        dsMinLast.load()
+    
 
 n = 0
 
@@ -92,44 +118,44 @@ for xlat in range(len(lat)):
             # in southern hemisphere when planting happens in fall and harvest happens in spring
             if sacksStart_regrid[xlat, ylon] > sacksEnd_regrid[xlat, ylon]:
                 if maxT:
-                    curTmax = xr.concat([dsMaxLast.mx2t[int(sacksStart_regrid[xlat, ylon]):, xlat, ylon], \
-                                         dsMax.mx2t[:int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]], dim='time')
+                    curTmax = xr.concat([dsMaxLast[maxVar][int(sacksStart_regrid[xlat, ylon]):, xlat, ylon], \
+                                         dsMax[maxVar][:int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]], dim='time')
                 if minT:
-                    curTmin = xr.concat([dsMinLast.mn2t[int(sacksStart_regrid[xlat, ylon]):, xlat, ylon], \
-                                         dsMin.mn2t[:int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]], dim='time')
+                    curTmin = xr.concat([dsMinLast[minVar][int(sacksStart_regrid[xlat, ylon]):, xlat, ylon], \
+                                         dsMin[minVar][:int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]], dim='time')
                 cur_growingSeasonLen = (365-int(sacksStart_regrid[xlat, ylon])) + int(sacksEnd_regrid[xlat, ylon])
 
             else:
                 if maxT:
-                    curTmax = dsMax.mx2t[int(sacksStart_regrid[xlat, ylon]):int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]
+                    curTmax = dsMax[maxVar][int(sacksStart_regrid[xlat, ylon]):int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]
                 if minT:
-                    curTmin = dsMin.mn2t[int(sacksStart_regrid[xlat, ylon]):int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]
+                    curTmin = dsMin[minVar][int(sacksStart_regrid[xlat, ylon]):int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]
                 cur_growingSeasonLen = int(sacksEnd_regrid[xlat, ylon]) - int(sacksStart_regrid[xlat, ylon])
 
             growing_season_len[xlat, ylon] = cur_growingSeasonLen
             if maxT:
-                for q in range(era5_mx2t_quantiles.mx2t.shape[0]):
+                for q in range(era5_max_quantiles[maxVar].shape[0]):
                     if q < 3:
-                        heatwave_days[xlat, ylon, q] = np.where(curTmax.values < era5_mx2t_quantiles.mx2t[q, xlat, ylon].values)[0].size
+                        heatwave_days[xlat, ylon, q] = np.where(curTmax.values < era5_max_quantiles[maxVar][q, xlat, ylon].values)[0].size
                     else:
-                        heatwave_days[xlat, ylon, q] = np.where(curTmax.values > era5_mx2t_quantiles.mx2t[q, xlat, ylon].values)[0].size
+                        heatwave_days[xlat, ylon, q] = np.where(curTmax.values > era5_max_quantiles[maxVar][q, xlat, ylon].values)[0].size
             
             if minT:
-                for q in range(era5_mn2t_quantiles.mn2t.shape[0]):
+                for q in range(era5_min_quantiles[minVar].shape[0]):
                     if q < 3:
-                        coldwave_days[xlat, ylon, q] = np.where(curTmin.values < era5_mn2t_quantiles.mn2t[q, xlat, ylon].values)[0].size
+                        coldwave_days[xlat, ylon, q] = np.where(curTmin.values < era5_min_quantiles[minVar][q, xlat, ylon].values)[0].size
                     else:
-                        coldwave_days[xlat, ylon, q] = np.where(curTmin.values > era5_mn2t_quantiles.mn2t[q, xlat, ylon].values)[0].size
+                        coldwave_days[xlat, ylon, q] = np.where(curTmin.values > era5_min_quantiles[minVar][q, xlat, ylon].values)[0].size
             n += 1
 if maxT:
-    with open('heat_wave_days/era5_heat_wave_days_%d.dat'%year, 'wb') as f:
+    with open('heat_wave_days/era5_heat_wave_days_%s_%d.dat'%(crop, year), 'wb') as f:
         pickle.dump(heatwave_days, f)
 if minT:
-    with open('heat_wave_days/era5_cold_wave_days_%d.dat'%year, 'wb') as f:
+    with open('heat_wave_days/era5_cold_wave_days_%s_%d.dat'%(crop, year), 'wb') as f:
         pickle.dump(coldwave_days, f)
 
 if year == 1980:
-    with open('heat_wave_days/growing_season_len_maize.dat', 'wb') as f:
+    with open('heat_wave_days/growing_season_len_maize_%s.dat'%crop, 'wb') as f:
         pickle.dump(growing_season_len, f)
         
 # with open('era5_heat_wave_days.dat', 'wb') as f:
