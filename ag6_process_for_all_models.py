@@ -19,4 +19,7 @@ for m, model in enumerate(cmip6_models):
 #     if not os.path.isfile('cmip6_output/cmip6_tasmin_monthly_max_trend_regrid_global_%s.nc'%model):
     print('running %s'%model)
 #     os.system('screen -d -m ipython ag6_calc_cmip6_trends.py %s'%(model))
-    os.system('screen -d -m ipython ag6_calc_yearly_cmip6_bias.py %s'%(model))
+#     os.system('screen -d -m ipython ag6_calc_yearly_cmip6_bias.py %s'%(model))
+#     os.system('screen -d -m ipython ag6_calc_yearly_cmip6_bias_trends.py %s'%(model))
+    os.system('screen -d -m ipython ag6_calc_cmip6_grow_trends.py %s'%(model))
+#     os.system('screen -d -m ipython ag6_extract_cmip6_temp.py %s'%(model))
