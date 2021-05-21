@@ -14,9 +14,6 @@ dirCmip6 = '/home/edcoffel/drive/MAX-Filer/Research/Climate-02/Data-02-edcoffel-
 dirERA5 = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Data-edcoffel-F20/ERA5'
 dirSacks = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Personal-F20/edcoffel-F20/data/projects/ag-land-climate'
 
-# cmip6_models = ['access-cm2', 'access-esm1-5', 'awi-cm-1-1-mr', 'bcc-csm2-mr', 'bcc-esm1', 'canesm5', 'ec-earth3', \
-#                 'gfdl-cm4', 'gfdl-esm4', 'giss-e2-1-g', 'kace-1-0-g', 'fgoals-g3', 'inm-cm5-0', 'ipsl-cm6a-lr', 'miroc6', \
-#                 'mpi-esm1-2-hr', 'mpi-esm1-2-lr', 'mri-esm2-0', 'noresm2-lm', 'noresm2-mm', 'sam0-unicon']
 
 cmip6_models = ['access-cm2', 'access-esm1-5', 'awi-cm-1-1-mr', 'bcc-csm2-mr', 'bcc-esm1', 'canesm5', 'ec-earth3', \
                 'gfdl-cm4', 'gfdl-esm4', 'giss-e2-1-g', 'kace-1-0-g', 'fgoals-g3', 'inm-cm5-0', 'ipsl-cm6a-lr', 'miroc6', \
@@ -24,7 +21,7 @@ cmip6_models = ['access-cm2', 'access-esm1-5', 'awi-cm-1-1-mr', 'bcc-csm2-mr', '
 
 region = 'global'
 var = 'tasmax'
-crop = 'Maize'
+crop = 'Soybeans'
 model = sys.argv[1]
 
 if region == 'global':
@@ -102,8 +99,9 @@ for xlat in range(cmip6_temp_hist.lat.size):
 
                     curTmax = np.concatenate([curTmax1, curTmax2])
 
-                    yearly_grow_tmax[y, xlat, ylon] = np.nanmax(curTmax)
-                    yearly_grow_tmean[y, xlat, ylon] = np.nanmean(curTmax)
+                    if len(curTmax) > 0:
+                        yearly_grow_tmax[y, xlat, ylon] = np.nanmax(curTmax)
+                        yearly_grow_tmean[y, xlat, ylon] = np.nanmean(curTmax)
                 n += 1
 
 #                     cur_growingSeasonLen = (365-int(sacksStart_regrid[xlat, ylon])) + int(sacksEnd_regrid[xlat, ylon])
@@ -113,8 +111,9 @@ for xlat in range(cmip6_temp_hist.lat.size):
                 for y,year in enumerate(np.array(list(yearly_groups.keys()))):
 
                     curTmax = cmip6_temp_hist[var][np.array(yearly_groups[year])[int(sacksStart_regrid[xlat, ylon]):int(sacksEnd_regrid[xlat, ylon])], xlat, ylon]
-                    yearly_grow_tmax[y, xlat, ylon] = np.nanmax(curTmax)
-                    yearly_grow_tmean[y, xlat, ylon] = np.nanmean(curTmax)
+                    if len(curTmax) > 0:
+                        yearly_grow_tmax[y, xlat, ylon] = np.nanmax(curTmax)
+                        yearly_grow_tmean[y, xlat, ylon] = np.nanmean(curTmax)
                 n += 1
 #                         cur_growingSeasonLen = int(sacksEnd_regrid[xlat, ylon]) - int(sacksStart_regrid[xlat, ylon])
 
