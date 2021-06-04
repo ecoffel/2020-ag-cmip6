@@ -21,7 +21,7 @@ cmip6_models = ['access-cm2', 'access-esm1-5', 'awi-cm-1-1-mr', 'bcc-csm2-mr', '
 
 region = 'global'
 var = 'tasmax'
-crop = 'Soybeans'
+crop = 'Maize'
 model = sys.argv[1]
 
 if region == 'global':

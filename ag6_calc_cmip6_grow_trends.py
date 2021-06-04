@@ -18,7 +18,7 @@ dirProj = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Personal-F20/edcof
 model = sys.argv[1]
 region = 'global'
 crop = 'Maize'
-var = 'tasmax'
+var = 'ef'
 
 if not os.path.isfile('cmip6_output/growing_season/cmip6_%s_tasmax_grow_max_%s_%s_regrid.nc'%(crop, region, model)):
     print('no base file, quitting')

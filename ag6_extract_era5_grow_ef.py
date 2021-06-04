@@ -121,7 +121,7 @@ print('renaming dims...')
 
 da_grow_ef = xr.DataArray(data   = yearly_grow_ef, 
                       dims   = ['lat', 'lon'],
-                      coords = {'time':year, 'lat':temp_era5.lat, 'lon':temp_era5.lon},
+                      coords = {'time':year, 'lat':slhf_era5.lat, 'lon':slhf_era5.lon},
                       attrs  = {'units'     : 'Fraction'
                         })
 ds_grow_ef = xr.Dataset()
