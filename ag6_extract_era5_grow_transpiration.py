@@ -13,8 +13,8 @@ import datetime
 dirERA5Land = '/home/edcoffel/drive/MAX-Filer/Research/Climate-02/Data-02-edcoffel-F20/ERA5-Land'
 dirSacks = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Personal-F20/edcoffel-F20/data/projects/ag-land-climate'
 
-file_var = 'transpiration'
-orig_var = 'evavt'
+file_var = 'transpiration_new'
+orig_var = 'evabs'
 crop = 'Maize'
 
 year = int(sys.argv[1])
@@ -60,8 +60,8 @@ trans_era5_last_year = trans_era5_last_year.rename({'latitude':'lat', 'longitude
 regridMesh_cur_model = xr.Dataset({'lat': (['lat'], sacksLat),
                                    'lon': (['lon'], sacksLon)})
 
-regridder_trans = xe.Regridder(xr.DataArray(data=trans_era5.evavt, dims=['time', 'lat', 'lon'], coords={'lat':trans_era5.lat, 'lon':trans_era5.lon}), regridMesh_cur_model, 'bilinear', reuse_weights=True)
-regridder_trans_last_year = xe.Regridder(xr.DataArray(data=trans_era5_last_year.evavt, dims=['time', 'lat', 'lon'], coords={'lat':trans_era5_last_year.lat, 'lon':trans_era5_last_year.lon}), regridMesh_cur_model, 'bilinear', reuse_weights=True)
+regridder_trans = xe.Regridder(xr.DataArray(data=trans_era5[orig_var], dims=['time', 'lat', 'lon'], coords={'lat':trans_era5.lat, 'lon':trans_era5.lon}), regridMesh_cur_model, 'bilinear', reuse_weights=True)
+regridder_trans_last_year = xe.Regridder(xr.DataArray(data=trans_era5_last_year[orig_var], dims=['time', 'lat', 'lon'], coords={'lat':trans_era5_last_year.lat, 'lon':trans_era5_last_year.lon}), regridMesh_cur_model, 'bilinear', reuse_weights=True)
 
 trans_era5 = regridder_trans(trans_era5)
 trans_era5_last_year = regridder_trans_last_year(trans_era5_last_year)
