@@ -25,6 +25,7 @@ for m, model in enumerate(cmip6_models):
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_ef_bias.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_pr_bias.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_tran_bias.py %s'%(model))
+    os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_evap_bias.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_ef_bias_trends.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_yearly_cmip6_bias_trends.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_bias_trends.py %s'%(model))
@@ -36,4 +37,5 @@ for m, model in enumerate(cmip6_models):
 #     os.system('screen -d -m ipython ag6_calc_cmip6_mrso_grow_mon.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_cmip6_cropFrac_grow_mon.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_cmip6_tran_grow_mon.py %s'%(model))
+#     os.system('screen -d -m ipython ag6_calc_cmip6_evap_grow_mon.py %s'%(model))
     
