@@ -22,7 +22,13 @@ cmip6_models = ['access-cm2', 'access-esm1-5', 'awi-cm-1-1-mr', 'bcc-csm2-mr', '
 region = 'global'
 var = 'pr'
 crop = 'Maize'
+rcp = 'ssp245'
 model = sys.argv[1]
+
+if rcp == 'historical':
+    yearRange = [1981, 2014]
+else:
+    yearRange = [2070, 2099]
 
 if region == 'global':
     latRange = [-90, 90]
@@ -43,11 +49,11 @@ sacksLat = np.linspace(90, -90, 360)
 sacksLon = np.linspace(0, 360, 720)
     
 def in_time_range(y):
-    return (y >= 1981) & (y <= 2014)
+    return (y >= yearRange[0]) & (y <= yearRange[1])
 
 
 print('opening %s...'%model)
-cmip6_pr_hist = xr.open_mfdataset('%s/%s/r1i1p1f1/historical/%s/*.nc'%(dirCmip6, model, var), concat_dim='time')
+cmip6_pr_hist = xr.open_mfdataset('%s/%s/r1i1p1f1/%s/%s/*.nc'%(dirCmip6, model, rcp, var), concat_dim='time')
 
 print('selecting data for %s...'%model)
 cmip6_pr_hist = cmip6_pr_hist.sel(lat=slice(latRange[0], latRange[1]), \
@@ -68,7 +74,7 @@ sacksEnd_regrid = regridder_end(sacksEnd)
 
 yearly_groups = cmip6_pr_hist.groupby('time.year').groups
 
-yearly_grow_pr_mean = np.full([2014-1981+1, cmip6_pr_hist.lat.size, cmip6_pr_hist.lon.size], np.nan)
+yearly_grow_pr_mean = np.full([yearRange[1]-yearRange[0]+1, cmip6_pr_hist.lat.size, cmip6_pr_hist.lon.size], np.nan)
 
 # count up all non-nan grid cells so we can estimate percent complete
 ngrid = 0
@@ -122,5 +128,5 @@ ds_grow_pr_mean = xr.Dataset()
 ds_grow_pr_mean['%s_grow_mean'%var] = da_grow_pr_mean
 
 print('saving netcdf...')
-ds_grow_pr_mean.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_mean_%s_%s.nc'%(crop, var, region, model))
+ds_grow_pr_mean.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_mean_%s_%s.nc'%(crop, rcp, var, region, model))
     
