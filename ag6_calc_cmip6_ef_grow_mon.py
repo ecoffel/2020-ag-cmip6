@@ -21,6 +21,7 @@ cmip6_models = ['access-cm2', 'access-esm1-5', 'awi-cm-1-1-mr', 'bcc-csm2-mr', '
 
 region = 'global'
 crop = 'Maize'
+rcp = 'ssp245'
 model = sys.argv[1]
 
 if region == 'global':
@@ -30,6 +31,11 @@ elif region == 'us':
     latRange = [20, 55]
     lonRange = [220, 300]
 
+if rcp == 'historical':
+    yearRange = [1981, 2014]
+else:
+    yearRange = [2070, 2099]
+    
 sacksMaizeNc = xr.open_dataset('%s/sacks/%s.crop.calendar.fill.nc'%(dirSacks, crop))
 sacksStart = sacksMaizeNc['plant'].values
 sacksStart = np.roll(sacksStart, -int(sacksStart.shape[1]/2), axis=1)
@@ -42,12 +48,12 @@ sacksLat = np.linspace(90, -90, 360)
 sacksLon = np.linspace(0, 360, 720)
     
 def in_time_range(y):
-    return (y >= 1981) & (y <= 2014)
+    return (y >= yearRange[0]) & (y <= yearRange[1])
 
 
 print('opening %s...'%model)
-cmip6_hfls_hist = xr.open_mfdataset('%s/%s/r1i1p1f1/historical/hfls/hfls_Amon_*.nc'%(dirCmip6, model), concat_dim='time')
-cmip6_hfss_hist = xr.open_mfdataset('%s/%s/r1i1p1f1/historical/hfss/hfss_Amon_*.nc'%(dirCmip6, model), concat_dim='time')
+cmip6_hfls_hist = xr.open_mfdataset('%s/%s/r1i1p1f1/%s/hfls/hfls_Amon_*.nc'%(dirCmip6, model, rcp), concat_dim='time')
+cmip6_hfss_hist = xr.open_mfdataset('%s/%s/r1i1p1f1/%s/hfss/hfss_Amon_*.nc'%(dirCmip6, model, rcp), concat_dim='time')
 
 print('selecting data for %s...'%model)
 cmip6_hfls_hist = cmip6_hfls_hist.sel(time=in_time_range(cmip6_hfls_hist['time.year']))
@@ -80,7 +86,7 @@ for xlat in range(sacksStart_regrid.shape[0]):
             sacksEnd_regrid[xlat, ylon] = curEnd
 
 yearly_groups = cmip6_hfls_hist.groupby('time.year').groups
-yearly_grow_ef = np.full([2014-1981+1, cmip6_hfls_hist.lat.size, cmip6_hfls_hist.lon.size], np.nan)
+yearly_grow_ef = np.full([yearRange[1]-yearRange[0]+1, cmip6_hfls_hist.lat.size, cmip6_hfls_hist.lon.size], np.nan)
 
 # count up all non-nan grid cells so we can estimate percent complete
 ngrid = 0
@@ -142,6 +148,6 @@ ds_grow_ef = xr.Dataset()
 ds_grow_ef['grow_ef'] = da_grow_ef
 
 print('saving netcdf...')
-ds_grow_ef.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_ef_mon_%s_%s.nc'%(crop, region, model))
+ds_grow_ef.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_ef_mon_%s_%s.nc'%(crop, rcp, region, model))
     
     
