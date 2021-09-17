@@ -21,9 +21,10 @@ cmip6_models = ['access-cm2', 'access-esm1-5', 'awi-cm-1-1-mr', 'bcc-csm2-mr', '
 
 region = 'global'
 var = 'tasmax'
-rcp = 'ssp245'
+rcp = 'historical'
 crop = 'Maize'
 model = sys.argv[1]
+member = sys.argv[2]
 
 if rcp == 'historical':
     yearRange = [1981, 2014]
@@ -52,8 +53,8 @@ def in_time_range(y, y1, y2):
     return (y >= y1) & (y <= y2)
 
 
-print('opening %s...'%model)
-cmip6_temp_hist = xr.open_mfdataset('%s/%s/r1i1p1f1/%s/%s/*.nc'%(dirCmip6, model, rcp, var), concat_dim='time')
+print('opening %s for %s...'%(member, model))
+cmip6_temp_hist = xr.open_mfdataset('%s/%s/%s/%s/%s/*.nc'%(dirCmip6, model, member, rcp, var), concat_dim='time')
 
 print('selecting data for %s...'%model)
 cmip6_temp_hist = cmip6_temp_hist.sel(lat=slice(latRange[0], latRange[1]), \
@@ -87,11 +88,11 @@ for xlat in range(cmip6_temp_hist.lat.size):
 
 n = 0
 for xlat in range(cmip6_temp_hist.lat.size):
-    
+
     for ylon in range(cmip6_temp_hist.lon.size):
 
         if ~np.isnan(sacksStart_regrid[xlat, ylon]) and ~np.isnan(sacksEnd_regrid[xlat, ylon]):
-            
+
             if n % 100 == 0:
                 print('%.2f%%'%(n/ngrid*100))
 
@@ -141,49 +142,5 @@ ds_grow_tmean['%s_grow_mean'%var] = da_grow_tmean
 
 
 print('saving netcdf...')
-ds_grow_tmax.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_max_%s_%s.nc'%(crop, rcp, var, region, model))
-ds_grow_tmean.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_mean_%s_%s.nc'%(crop, rcp, var, region, model))
-    
-    
-#     print('resampling %s...'%model)
-# #     cmip6_max_hist = cmip6_temp_hist.resample(time='1Y').max(dim='time')
-#     cmip6_monthly_max_hist = cmip6_temp_hist.resample(time='1M').max(dim='time')
-# #     cmip6_mean_hist = cmip6_temp_hist.resample(time='1Y').mean(dim='time')
-
-
-# #     
-#     cmip6_monthly_max_hist[var] -= 273.15
-# #     cmip6_mean_hist[var] -= 273.15
-
-# #     cmip6_max_ds = xr.Dataset()
-#     cmip6_monthly_max_ds = xr.Dataset()
-# #     cmip6_mean_ds = xr.Dataset()
-
-#     if n == 0:
-# #         timeVar = cmip6_max_hist.time
-#         timeVar_monthly = cmip6_monthly_max_hist.time
-
-
-
-#     tempDs_monthly_max = xr.DataArray(data   = cmip6_monthly_max_hist[var], 
-#                           dims   = ['time', 'lat', 'lon'],
-#                           coords = {'time': timeVar_monthly, 'lat':cmip6_monthly_max_hist.lat, 'lon':cmip6_monthly_max_hist.lon},
-#                           attrs  = {'units'     : 'C'
-#                             })
-#     cmip6_monthly_max_ds['%s_monthly_max'%var] = tempDs_monthly_max
-
-# #     tempDs_mean = xr.DataArray(data   = cmip6_mean_hist[var], 
-# #                           dims   = ['time', 'lat', 'lon'],
-# #                           coords = {'time': timeVar, 'lat':cmip6_mean_hist.lat, 'lon':cmip6_mean_hist.lon},
-# #                           attrs  = {'units'     : 'C'
-# #                             })
-# #     cmip6_mean_ds['%s_mean'%var] = tempDs_mean
-
-
-# #     cmip6_max_ds.to_netcdf('cmip6_output/cmip6_%s_max_%s_%s9.nc'%(var, region, model))
-#     cmip6_monthly_max_ds.to_netcdf('cmip6_output/cmip6_%s_monthly_max_%s_%s.nc'%(var, region, model))
-# #     cmip6_mean_ds.to_netcdf('cmip6_output/cmip6_%s_mean_%s_%s9.nc'%(var, region, model))
-    
-#     print()
-#     n += 1
-# cmip6_monthly_mean_tx_ds.to_netcdf('cmip6_monthly_mean_tx_us.nc')
+ds_grow_tmax.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_%s_max_%s_%s.nc'%(crop, rcp, member, var, region, model))
+ds_grow_tmean.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_%s_mean_%s_%s.nc'%(crop, rcp, member, var, region, model))
