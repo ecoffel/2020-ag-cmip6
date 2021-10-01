@@ -1,2 +1,6 @@
 *.dat
 *.nc
+*.png
+*.db
+clm5/
+.ipynb_checkpoints/
