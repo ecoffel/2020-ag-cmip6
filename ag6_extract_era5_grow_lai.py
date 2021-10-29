@@ -11,6 +11,7 @@ import sys
 import datetime
 
 dirERA5Land = '/home/edcoffel/drive/MAX-Filer/Research/Climate-02/Data-02-edcoffel-F20/ERA5-Land'
+dirERA5 = '/home/edcoffel/drive/MAX-Filer/Research/Climate-02/Data-02-edcoffel-F20/ERA5'
 dirSacks = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Personal-F20/edcoffel-F20/data/projects/ag-land-climate'
 
 file_var1 = 'lai_low'
@@ -40,7 +41,27 @@ sacksLon = np.linspace(0, 360, 720)
 
 regridMesh_cur_model = xr.Dataset()
 
+# regrid sacks data to current model res
+regridMesh_cur_model = xr.Dataset({'lat': (['lat'], sacksLat),
+                                   'lon': (['lon'], sacksLon)})
+
 n = 0
+
+# load low vegetaion cover
+era5_low_veg = xr.open_dataset('%s/low_vegetation_cover.nc'%dirERA5)
+
+era5_low_veg = era5_low_veg.rename_dims(latitude='lat', longitude='lon')
+era5_low_veg = era5_low_veg.rename({'latitude':'lat', 'longitude':'lon'})
+
+era5_low_veg = era5_low_veg.isel(time=0,expver=0)
+era5_low_veg.load()
+
+era5_low_veg = era5_low_veg.drop('expver')
+era5_low_veg = era5_low_veg.drop('time')
+
+regridder_low_veg = xe.Regridder(xr.DataArray(data=era5_low_veg.cvl, dims=['lat', 'lon'], coords={'lat':era5_low_veg.lat, 'lon':era5_low_veg.lon}), regridMesh_cur_model, 'bilinear', reuse_weights=True)
+era5_low_veg = regridder_low_veg(era5_low_veg)
+
 
 # LOAD 1 YEAR OF ERA5 DATA
 print('opening era5 %d...'%year)
@@ -70,9 +91,7 @@ lai_high_era5_last_year = lai_high_era5_last_year.rename_dims(latitude='lat', lo
 lai_high_era5_last_year = lai_high_era5_last_year.rename({'latitude':'lat', 'longitude':'lon'})
 
 # THIS USES XESMF TO REGRID THE SACKS DATA TO ERA5 RES
-# regrid sacks data to current model res
-regridMesh_cur_model = xr.Dataset({'lat': (['lat'], sacksLat),
-                                   'lon': (['lon'], sacksLon)})
+
 
 regridder_lai_low = xe.Regridder(xr.DataArray(data=lai_low_era5[orig_var1], dims=['time', 'lat', 'lon'], coords={'lat':lai_low_era5.lat, 'lon':lai_low_era5.lon}), regridMesh_cur_model, 'bilinear', reuse_weights=True)
 regridder_lai_high = xe.Regridder(xr.DataArray(data=lai_high_era5[orig_var2], dims=['time', 'lat', 'lon'], coords={'lat':lai_high_era5.lat, 'lon':lai_high_era5.lon}), regridMesh_cur_model, 'bilinear', reuse_weights=True)
