@@ -17,8 +17,8 @@ cmip6_models = ['access-cm2', 'access-esm1-5', 'awi-cm-1-1-mr', 'bcc-csm2-mr', '
 for y, year in enumerate(range(1981,2015)):
     
     print('running %d'%year)
-#     os.system('screen -d -m ipython ag6_extract_era5_grow_lai.py %d'%(year))
+    os.system('screen -d -m ipython ag6_extract_era5_grow_lai.py %d'%(year))
 #     os.system('screen -d -m ipython ag6_extract_cpc_grow_temp.py %d'%(year))
-    os.system('screen -d -m ipython ag6_extract_gldas_grow_et.py %d'%(year))
+#     os.system('screen -d -m ipython ag6_extract_gldas_grow_et.py %d'%(year))
 
     

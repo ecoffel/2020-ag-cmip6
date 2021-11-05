@@ -48,7 +48,7 @@ regridMesh_cur_model = xr.Dataset({'lat': (['lat'], sacksLat),
 n = 0
 
 # load low vegetaion cover
-era5_low_veg = xr.open_dataset('%s/low_vegetation_cover.nc'%dirERA5)
+era5_low_veg = xr.open_dataset('%s/monthly/low_vegetation_cover.nc'%dirERA5)
 
 era5_low_veg = era5_low_veg.rename_dims(latitude='lat', longitude='lon')
 era5_low_veg = era5_low_veg.rename({'latitude':'lat', 'longitude':'lon'})
@@ -61,6 +61,21 @@ era5_low_veg = era5_low_veg.drop('time')
 
 regridder_low_veg = xe.Regridder(xr.DataArray(data=era5_low_veg.cvl, dims=['lat', 'lon'], coords={'lat':era5_low_veg.lat, 'lon':era5_low_veg.lon}), regridMesh_cur_model, 'bilinear', reuse_weights=True)
 era5_low_veg = regridder_low_veg(era5_low_veg)
+
+# and load high veg cover
+era5_high_veg = xr.open_dataset('%s/monthly/high_vegetation_cover.nc'%dirERA5)
+
+era5_high_veg = era5_high_veg.rename_dims(latitude='lat', longitude='lon')
+era5_high_veg = era5_high_veg.rename({'latitude':'lat', 'longitude':'lon'})
+
+era5_high_veg = era5_high_veg.isel(time=0,expver=0)
+era5_high_veg.load()
+
+era5_high_veg = era5_high_veg.drop('expver')
+era5_high_veg = era5_high_veg.drop('time')
+
+regridder_high_veg = xe.Regridder(xr.DataArray(data=era5_high_veg.cvh, dims=['lat', 'lon'], coords={'lat':era5_high_veg.lat, 'lon':era5_high_veg.lon}), regridMesh_cur_model, 'bilinear', reuse_weights=True)
+era5_high_veg = regridder_high_veg(era5_high_veg)
 
 
 # LOAD 1 YEAR OF ERA5 DATA
@@ -153,8 +168,8 @@ for xlat in range(lai_low_era5.lat.size):
                 cur_lai_high1 = lai_high_era5_last_year[orig_var2][int(sacksEnd[xlat, ylon]):, xlat, ylon]
                 cur_lai_high2 = lai_high_era5[orig_var2][:int(sacksStart[xlat, ylon]), xlat, ylon]
 
-                cur_lai_low = np.concatenate([cur_lai_low1, cur_lai_low2])
-                cur_lai_high = np.concatenate([cur_lai_high1, cur_lai_high2])
+                cur_lai_low = np.concatenate([cur_lai_low1, cur_lai_low2]) * era5_low_veg.cvl.values[xlat, ylon]
+                cur_lai_high = np.concatenate([cur_lai_high1, cur_lai_high2]) * era5_high_veg.cvh.values[xlat, ylon]
 
                 if len(cur_lai_low) > 0 and len(cur_lai_high) > 0:
                     yearly_grow_lai_low_mean[xlat, ylon] = np.nanmean(cur_lai_low)
@@ -168,8 +183,8 @@ for xlat in range(lai_low_era5.lat.size):
                 cur_lai_high = lai_high_era5[orig_var2][int(sacksStart[xlat, ylon]):int(sacksEnd[xlat, ylon]), xlat, ylon]
                 
                 if len(cur_lai_low) > 0 and len(cur_lai_high) > 0:
-                    yearly_grow_lai_low_mean[xlat, ylon] = np.nanmean(cur_lai_low)
-                    yearly_grow_lai_high_mean[xlat, ylon] = np.nanmean(cur_lai_high)
+                    yearly_grow_lai_low_mean[xlat, ylon] = np.nanmean(cur_lai_low) * era5_low_veg.cvl.values[xlat, ylon]
+                    yearly_grow_lai_high_mean[xlat, ylon] = np.nanmean(cur_lai_high) * era5_high_veg.cvh.values[xlat, ylon]
                     
                 n += 1
 
