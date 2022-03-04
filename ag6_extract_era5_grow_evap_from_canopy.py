@@ -73,11 +73,11 @@ for xlat in range(evap_era5.lat.size):
         
         if not np.isnan(sacksStart[xlat, ylon]):
             curStart = datetime.datetime.strptime('2020%d'%(round(sacksStart[xlat, ylon])+1), '%Y%j').date().month
-            sacksStart[xlat, ylon] = curStart
+            sacksStart[xlat, ylon] = curStart-1
             
         if not np.isnan(sacksEnd[xlat, ylon]):
             curEnd = datetime.datetime.strptime('2020%d'%(round(sacksEnd[xlat, ylon])+1), '%Y%j').date().month
-            sacksEnd[xlat, ylon] = curEnd
+            sacksEnd[xlat, ylon] = curEnd-1
         
         if ~np.isnan(sacksStart[xlat, ylon]) and ~np.isnan(sacksEnd[xlat, ylon]):
             ngrid += 1
@@ -107,8 +107,8 @@ for xlat in range(evap_era5.lat.size):
             if sacksStart[xlat, ylon] > sacksEnd[xlat, ylon]:
 
                 # start loop on 2nd year to allow for growing season that crosses jan 1
-                curevap1 = evap_era5_last_year[orig_var][int(sacksEnd[xlat, ylon]):, xlat, ylon]
-                curevap2 = evap_era5[orig_var][:int(sacksStart[xlat, ylon]), xlat, ylon]
+                curevap1 = evap_era5_last_year[orig_var][int(sacksStart[xlat, ylon]):, xlat, ylon]
+                curevap2 = evap_era5[orig_var][:int(sacksEnd[xlat, ylon]), xlat, ylon]
 
                 curevap = np.concatenate([curevap1, curevap2])
 
@@ -137,4 +137,4 @@ ds_grow_evap_mean = xr.Dataset()
 ds_grow_evap_mean['evap_grow_mean'] = da_grow_evap_mean
 
 print('saving netcdf...')
-ds_grow_evap_mean.to_netcdf('era5/growing_season/era5_%s_evap_from_canopy_grow_mean_global_%d.nc'%(crop, year))
+ds_grow_evap_mean.to_netcdf('era5/growing_season/era5_%s_evap_from_canopy_grow_mean_global_%d_fixed_sh.nc'%(crop, year))

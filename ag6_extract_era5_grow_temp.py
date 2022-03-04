@@ -15,7 +15,7 @@ dirSacks = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Personal-F20/edco
 
 file_var = 'tasmax'
 orig_var = 'mx2t'
-crop = 'Soybeans'
+crop = 'Maize'
 
 year = int(sys.argv[1])
 
@@ -87,8 +87,8 @@ for xlat in range(temp_era5.lat.size):
             if sacksStart_regrid[xlat, ylon] > sacksEnd_regrid[xlat, ylon]:
 
                 # start loop on 2nd year to allow for growing season that crosses jan 1
-                curTmax1 = temp_era5_last_year[orig_var][int(sacksEnd_regrid[xlat, ylon]):, xlat, ylon]
-                curTmax2 = temp_era5[orig_var][:int(sacksStart_regrid[xlat, ylon]), xlat, ylon]
+                curTmax1 = temp_era5_last_year[orig_var][int(sacksStart_regrid[xlat, ylon]):, xlat, ylon]
+                curTmax2 = temp_era5[orig_var][:int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]
 
                 curTmax = np.concatenate([curTmax1, curTmax2])
 
@@ -124,5 +124,5 @@ ds_grow_tmean = xr.Dataset()
 ds_grow_tmean['%s_grow_mean'%file_var] = da_grow_tmean
 
 print('saving netcdf...')
-ds_grow_tmax.to_netcdf('era5/growing_season/era5_%s_%s_grow_max_global_%d.nc'%(crop, file_var, year))
-ds_grow_tmean.to_netcdf('era5/growing_season/era5_%s_%s_grow_mean_global_%d.nc'%(crop, file_var, year))
+ds_grow_tmax.to_netcdf('era5/growing_season/era5_%s_%s_grow_max_global_%d_fixed_sh.nc'%(crop, file_var, year))
+ds_grow_tmean.to_netcdf('era5/growing_season/era5_%s_%s_grow_mean_global_%d_fixed_sh.nc'%(crop, file_var, year))

@@ -30,31 +30,31 @@ tran_exist = False
 canopy_evap_exist = False
 soil_evap_exist = False
 
-if os.path.isfile('cmip6_output/growing_season/cmip6_%s_grow_tran_mon_%s_%s_regrid.nc'%(crop, region, model)):
+if os.path.isfile('cmip6_output/growing_season/cmip6_%s_grow_tran_mon_%s_%s_regrid_fixed_sh.nc'%(crop, region, model)):
     tran_exist=True
-if os.path.isfile('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid.nc'%(crop, 'evspsblveg', model)):
+if os.path.isfile('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid_fixed_sh.nc'%(crop, 'evspsblveg', model)):
     canopy_evap_exist=True
-if os.path.isfile('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid.nc'%(crop, 'evspsblsoi', model)):
+if os.path.isfile('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid_fixed_sh.nc'%(crop, 'evspsblsoi', model)):
     soil_evap_exist=True
 
 print('loading regridded et for %s'%model)
 if tran_exist:
-    cmip6_tran_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_tran_mon_%s_%s_regrid.nc'%(crop, region, model))
+    cmip6_tran_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_tran_mon_%s_%s_regrid_fixed_sh.nc'%(crop, region, model))
 
 if canopy_evap_exist:
-    cmip6_evap_canopy_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid.nc'%(crop, 'evspsblveg', model))
+    cmip6_evap_canopy_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid_fixed_sh.nc'%(crop, 'evspsblveg', model))
     
 if soil_evap_exist:
-    cmip6_evap_soil_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid.nc'%(crop, 'evspsblsoi', model))
+    cmip6_evap_soil_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid_fixed_sh.nc'%(crop, 'evspsblsoi', model))
 
 print('loading pre-computed gldas...')
-gldas_noah_tran_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_tran_grow_mean_regrid_%s.nc'%('NOAH',crop,region))
-gldas_noah_soil_evap_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_soil_evap_grow_mean_regrid_%s.nc'%('NOAH', crop,region))
-gldas_noah_canopy_evap_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_canopy_evap_grow_mean_regrid_%s.nc'%('NOAH',crop,region))
+gldas_noah_tran_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_tran_grow_mean_regrid_%s_fixed_sh.nc'%('NOAH',crop,region))
+gldas_noah_soil_evap_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_soil_evap_grow_mean_regrid_%s_fixed_sh.nc'%('NOAH', crop,region))
+gldas_noah_canopy_evap_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_canopy_evap_grow_mean_regrid_%s_fixed_sh.nc'%('NOAH',crop,region))
 
-gldas_vic_tran_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_tran_grow_mean_regrid_%s.nc'%('VIC',crop,region))
-gldas_vic_soil_evap_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_soil_evap_grow_mean_regrid_%s.nc'%('VIC', crop,region))
-gldas_vic_canopy_evap_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_canopy_evap_grow_mean_regrid_%s.nc'%('VIC',crop,region))
+gldas_vic_tran_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_tran_grow_mean_regrid_%s_fixed_sh.nc'%('VIC',crop,region))
+gldas_vic_soil_evap_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_soil_evap_grow_mean_regrid_%s_fixed_sh.nc'%('VIC', crop,region))
+gldas_vic_canopy_evap_grow_mean_regrid = xr.open_dataset('gldas_output/gldas_%s_%s_canopy_evap_grow_mean_regrid_%s_fixed_sh.nc'%('VIC',crop,region))
 
 gldas_tran_grow_mean_regrid = (gldas_noah_tran_grow_mean_regrid.evap_grow_mean.values + gldas_vic_tran_grow_mean_regrid.evap_grow_mean.values)/2
 gldas_soil_evap_grow_mean_regrid = (gldas_noah_soil_evap_grow_mean_regrid.evap_grow_mean.values + gldas_vic_soil_evap_grow_mean_regrid.evap_grow_mean.values)/2
@@ -96,13 +96,13 @@ for y, year in enumerate(range(1981, 2014+1)):
             
 
 if tran_exist:
-    with open('cmip6_output/bias/yearly-cmip6-gldas-tran-grow-bias-%s-%s.dat'%(region, model), 'wb') as f:
+    with open('cmip6_output/bias/yearly-cmip6-gldas-tran-grow-bias-%s-%s-fixed-sh.dat'%(region, model), 'wb') as f:
         pickle.dump(yearly_tran_grow_bias, f)
     
 if canopy_evap_exist:
-    with open('cmip6_output/bias/yearly-cmip6-gldas-canopy-evap-grow-bias-%s-%s.dat'%(region, model), 'wb') as f:
+    with open('cmip6_output/bias/yearly-cmip6-gldas-canopy-evap-grow-bias-%s-%s-fixed-sh.dat'%(region, model), 'wb') as f:
         pickle.dump(yearly_canopy_evap_grow_bias, f)
     
 if soil_evap_exist:
-    with open('cmip6_output/bias/yearly-cmip6-gldas-soil-evap-grow-bias-%s-%s.dat'%(region, model), 'wb') as f:
+    with open('cmip6_output/bias/yearly-cmip6-gldas-soil-evap-grow-bias-%s-%s-fixed-sh.dat'%(region, model), 'wb') as f:
         pickle.dump(yearly_soil_evap_grow_bias, f)

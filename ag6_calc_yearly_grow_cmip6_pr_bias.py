@@ -27,10 +27,10 @@ region = 'global'
 model = sys.argv[1]
 
 print('loading regridded pr for %s'%model)
-cmip6_pr_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_pr_mean_%s_%s_regrid.nc'%(crop, region, model))
+cmip6_pr_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_pr_mean_%s_%s_regrid_fixed_sh.nc'%(crop, region, model))
 
 print('loading pre-computed era5...')
-era5_pr_grow_regrid = xr.open_dataset('era5/growing_season/era5_%s_pr_grow_regrid_%s.nc'%(crop,region))
+era5_pr_grow_regrid = xr.open_dataset('era5/growing_season/era5_%s_pr_grow_regrid_%s_fixed_sh.nc'%(crop,region))
 
 
 yearly_pr_grow_bias = np.full([len(range(1981, 2014+1)), \
@@ -46,5 +46,5 @@ for y, year in enumerate(range(1981, 2014+1)):
             yearly_pr_grow_bias[y, xlat, ylon] = cmip6_pr_grow.pr_grow_mean.values[y, xlat, ylon] - \
                                                         era5_pr_grow_regrid.pr_grow_mean.values[y, xlat, ylon]
 
-with open('cmip6_output/bias/yearly-cmip6-era5-pr-grow-bias-%s-%s.dat'%(region, model), 'wb') as f:
+with open('cmip6_output/bias/yearly-cmip6-era5-pr-grow-bias-%s-%s-fixed-sh.dat'%(region, model), 'wb') as f:
     pickle.dump(yearly_pr_grow_bias, f)

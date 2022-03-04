@@ -29,10 +29,10 @@ model = sys.argv[1]
 cmip6_var = 'lai'
 era5_var = 'lai'
 
-lai_obs_regrid = xr.open_dataset('lai_data/lai_%s_grow_mean_regrid_global.nc'%(crop))
+lai_obs_regrid = xr.open_dataset('lai_data/lai_%s_grow_mean_regrid_global_fixed_sh.nc'%(crop))
 
 print('loading regridded lai for %s'%model)
-cmip6_lai_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid.nc'%(crop, cmip6_var, model))
+cmip6_lai_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid_fixed_sh.nc'%(crop, cmip6_var, model))
 
 
 lai_grow_bias = np.full([lai_obs_regrid.lat.values.shape[0], \
@@ -45,5 +45,5 @@ for xlat in range(lai_grow_bias.shape[0]):
         lai_grow_bias[xlat, ylon] = np.nanmean(cmip6_lai_grow['%s_grow_mean'%cmip6_var].values[:, xlat, ylon]) - \
                                                     lai_obs_regrid.lai_grow_mean.values[xlat, ylon]
 
-with open('cmip6_output/bias/climo-cmip6-obs-lai-grow-bias-%s-%s.dat'%(region, model), 'wb') as f:
+with open('cmip6_output/bias/climo-cmip6-obs-lai-grow-bias-%s-%s-fixed-sh.dat'%(region, model), 'wb') as f:
     pickle.dump(lai_grow_bias, f)

@@ -69,11 +69,11 @@ for xlat in range(sacksStart_regrid.shape[0]):
         
         if not np.isnan(sacksStart_regrid[xlat, ylon]):
             curStart = datetime.datetime.strptime('2020%d'%(round(sacksStart_regrid[xlat, ylon])+1), '%Y%j').date().month
-            sacksStart_regrid[xlat, ylon] = curStart
+            sacksStart_regrid[xlat, ylon] = curStart-1
             
         if not np.isnan(sacksEnd_regrid[xlat, ylon]):
             curEnd = datetime.datetime.strptime('2020%d'%(round(sacksEnd_regrid[xlat, ylon])+1), '%Y%j').date().month
-            sacksEnd_regrid[xlat, ylon] = curEnd
+            sacksEnd_regrid[xlat, ylon] = curEnd-1
 
 yearly_groups = cmip6_tran_hist.groupby('time.year').groups
 yearly_grow_tran = np.full([2014-1981+1, cmip6_tran_hist.lat.size, cmip6_tran_hist.lon.size], np.nan)
@@ -100,8 +100,8 @@ for xlat in range(cmip6_tran_hist.lat.size):
                 # start loop on 2nd year to allow for growing season that crosses jan 1
                 for y,year in enumerate(np.array(list(yearly_groups.keys()))[1:]):
 
-                    cur_tran1 = cmip6_tran_hist['tran'][np.array(yearly_groups[year-1])[int(sacksEnd_regrid[xlat, ylon]):], xlat, ylon]
-                    cur_tran2 = cmip6_tran_hist['tran'][np.array(yearly_groups[year])[:int(sacksStart_regrid[xlat, ylon])], xlat, ylon]
+                    cur_tran1 = cmip6_tran_hist['tran'][np.array(yearly_groups[year-1])[int(sacksStart_regrid[xlat, ylon]):], xlat, ylon]
+                    cur_tran2 = cmip6_tran_hist['tran'][np.array(yearly_groups[year])[:int(sacksEnd_regrid[xlat, ylon])], xlat, ylon]
 
                     cur_tran = np.nanmean(np.concatenate([cur_tran1, cur_tran2]))
 
@@ -129,6 +129,6 @@ ds_grow_tran = xr.Dataset()
 ds_grow_tran['grow_tran'] = da_grow_tran
 
 print('saving netcdf...')
-ds_grow_tran.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_tran_mon_%s_%s.nc'%(crop, region, model))
+ds_grow_tran.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_tran_mon_%s_%s_fixed_sh.nc'%(crop, region, model))
     
     

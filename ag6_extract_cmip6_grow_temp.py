@@ -54,7 +54,7 @@ def in_time_range(y, y1, y2):
 
 
 print('opening %s for %s...'%(member, model))
-cmip6_temp_hist = xr.open_mfdataset('%s/%s/%s/%s/%s/*.nc'%(dirCmip6, model, member, rcp, var), concat_dim='time')
+cmip6_temp_hist = xr.open_mfdataset('%s/%s/%s/%s/%s/*_day_*.nc'%(dirCmip6, model, member, rcp, var), concat_dim='time')
 
 print('selecting data for %s...'%model)
 cmip6_temp_hist = cmip6_temp_hist.sel(lat=slice(latRange[0], latRange[1]), \
@@ -101,8 +101,8 @@ for xlat in range(cmip6_temp_hist.lat.size):
                 # start loop on 2nd year to allow for growing season that crosses jan 1
                 for y,year in enumerate(np.array(list(yearly_groups.keys()))[1:]):
 
-                    curTmax1 = cmip6_temp_hist[var][np.array(yearly_groups[year-1])[int(sacksEnd_regrid[xlat, ylon]):], xlat, ylon]
-                    curTmax2 = cmip6_temp_hist[var][np.array(yearly_groups[year])[:int(sacksStart_regrid[xlat, ylon])], xlat, ylon]
+                    curTmax1 = cmip6_temp_hist[var][np.array(yearly_groups[year-1])[int(sacksStart_regrid[xlat, ylon]):], xlat, ylon]
+                    curTmax2 = cmip6_temp_hist[var][np.array(yearly_groups[year])[:int(sacksEnd_regrid[xlat, ylon])], xlat, ylon]
 
                     curTmax = np.concatenate([curTmax1, curTmax2])
 
@@ -142,5 +142,5 @@ ds_grow_tmean['%s_grow_mean'%var] = da_grow_tmean
 
 
 print('saving netcdf...')
-ds_grow_tmax.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_%s_max_%s_%s.nc'%(crop, rcp, member, var, region, model))
-ds_grow_tmean.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_%s_mean_%s_%s.nc'%(crop, rcp, member, var, region, model))
+ds_grow_tmax.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_%s_max_%s_%s_fixed_sh.nc'%(crop, rcp, member, var, region, model))
+ds_grow_tmean.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_%s_mean_%s_%s_fixed_sh.nc'%(crop, rcp, member, var, region, model))

@@ -82,11 +82,11 @@ for xlat in range(sacksStart_regrid.shape[0]):
         
         if not np.isnan(sacksStart_regrid[xlat, ylon]):
             curStart = datetime.datetime.strptime('2020%d'%(round(sacksStart_regrid[xlat, ylon])+1), '%Y%j').date().month
-            sacksStart_regrid[xlat, ylon] = curStart
+            sacksStart_regrid[xlat, ylon] = curStart-1
             
         if not np.isnan(sacksEnd_regrid[xlat, ylon]):
             curEnd = datetime.datetime.strptime('2020%d'%(round(sacksEnd_regrid[xlat, ylon])+1), '%Y%j').date().month
-            sacksEnd_regrid[xlat, ylon] = curEnd
+            sacksEnd_regrid[xlat, ylon] = curEnd-1
             
 n = 0
 for xlat in range(gpcp_pr_hist.lat.size):
@@ -103,8 +103,8 @@ for xlat in range(gpcp_pr_hist.lat.size):
                 # start loop on 2nd year to allow for growing season that crosses jan 1
                 for y,year in enumerate(np.array(list(yearly_groups.keys()))[1:]):
 
-                    curPr1 = gpcp_pr_hist[var][np.array(yearly_groups[year-1])[int(sacksEnd_regrid[xlat, ylon]):], xlat, ylon].values
-                    curPr2 = gpcp_pr_hist[var][np.array(yearly_groups[year])[:int(sacksStart_regrid[xlat, ylon])], xlat, ylon].values
+                    curPr1 = gpcp_pr_hist[var][np.array(yearly_groups[year-1])[int(sacksStart_regrid[xlat, ylon]):], xlat, ylon].values
+                    curPr2 = gpcp_pr_hist[var][np.array(yearly_groups[year])[:int(sacksEnd_regrid[xlat, ylon])], xlat, ylon].values
 
                     curPr = np.concatenate([curPr1, curPr2])
 
@@ -130,5 +130,5 @@ ds_grow_pr_mean = xr.Dataset()
 ds_grow_pr_mean['%s_grow_mean'%var] = da_grow_pr_mean
 
 print('saving netcdf...')
-ds_grow_pr_mean.to_netcdf('gpcp_output/gpcp_%s_grow_mean_%s.nc'%(crop, region))
+ds_grow_pr_mean.to_netcdf('gpcp_output/gpcp_%s_grow_mean_%s_fixed_sh.nc'%(crop, region))
     

@@ -14,11 +14,14 @@ cmip6_models = ['access-cm2', 'access-esm1-5', 'awi-cm-1-1-mr', 'bcc-csm2-mr', '
                 'gfdl-cm4', 'gfdl-esm4', 'giss-e2-1-g', 'kace-1-0-g', 'fgoals-g3', 'inm-cm5-0', 'ipsl-cm6a-lr', 'miroc6', \
                 'mpi-esm1-2-hr', 'mpi-esm1-2-lr', 'mri-esm2-0', 'noresm2-lm', 'noresm2-mm', 'sam0-unicon']
 
-for y, year in enumerate(range(1981,2015)):
+for y, year in enumerate(range(1981,2019)):
     
     print('running %d'%year)
-    os.system('screen -d -m ipython ag6_extract_era5_grow_lai.py %d'%(year))
+#     os.system('screen -d -m ipython ag6_extract_era5_grow_temp.py %d'%(year))
+#     os.system('screen -d -m ipython ag6_extract_era5_grow_lai.py %d'%(year))
+#     os.system('screen -d -m ipython ag6_extract_era5_grow_evap_from_soil.py %d'%(year))
+#     os.system('screen -d -m ipython ag6_extract_era5_grow_evap_from_canopy.py %d'%(year))
 #     os.system('screen -d -m ipython ag6_extract_cpc_grow_temp.py %d'%(year))
-#     os.system('screen -d -m ipython ag6_extract_gldas_grow_et.py %d'%(year))
+    os.system('screen -d -m ipython ag6_extract_gldas_grow_et.py %d'%(year))
 
     

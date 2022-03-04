@@ -28,13 +28,13 @@ region = 'global'
 model = sys.argv[1]
 
 print('loading regridded tasmax for %s'%model)
-cmip6_tasmax_grow_max = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_tasmax_grow_max_%s_%s_regrid.nc'%(crop, region, model))
-cmip6_tasmax_grow_mean = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_tasmax_grow_mean_%s_%s_regrid.nc'%(crop, region, model))
+cmip6_tasmax_grow_max = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_tasmax_grow_max_%s_%s_regrid_fixed_sh.nc'%(crop, region, model))
+cmip6_tasmax_grow_mean = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_tasmax_grow_mean_%s_%s_regrid_fixed_sh.nc'%(crop, region, model))
 
 
 print('loading pre-computed era5...')
-era5_tasmax_grow_max_regrid = xr.open_dataset('era5/growing_season/era5_%s_tasmax_grow_max_regrid_%s.nc'%(crop,region))
-era5_tasmax_grow_mean_regrid = xr.open_dataset('era5/growing_season/era5_%s_tasmax_grow_mean_regrid_%s.nc'%(crop,region))
+era5_tasmax_grow_max_regrid = xr.open_dataset('era5/growing_season/era5_%s_tasmax_grow_max_regrid_%s_fixed_sh.nc'%(crop,region))
+era5_tasmax_grow_mean_regrid = xr.open_dataset('era5/growing_season/era5_%s_tasmax_grow_mean_regrid_%s_fixed_sh.nc'%(crop,region))
 
 yearly_tasmax_grow_max_bias = np.full([len(range(1981, 2014+1)), \
                                   era5_tasmax_grow_max_regrid.lat.values.shape[0], \
@@ -55,7 +55,7 @@ for y, year in enumerate(range(1981, 2014+1)):
             yearly_tasmax_grow_mean_bias[y, xlat, ylon] = cmip6_tasmax_grow_mean.tasmax_grow_mean.values[y, xlat, ylon] - \
                                                         era5_tasmax_grow_mean_regrid.tasmax_grow_mean.values[y, xlat, ylon]
 
-with open('cmip6_output/bias/yearly-cmip6-era5-tasmax-grow-max-bias-%s-%s.dat'%(region, model), 'wb') as f:
+with open('cmip6_output/bias/yearly-cmip6-era5-tasmax-grow-max-bias-%s-%s_fixed_sh.dat'%(region, model), 'wb') as f:
     pickle.dump(yearly_tasmax_grow_max_bias, f)
-with open('cmip6_output/bias/yearly-cmip6-era5-tasmax-grow-mean-bias-%s-%s.dat'%(region, model), 'wb') as f:
+with open('cmip6_output/bias/yearly-cmip6-era5-tasmax-grow-mean-bias-%s-%s_fixed_sh.dat'%(region, model), 'wb') as f:
     pickle.dump(yearly_tasmax_grow_mean_bias, f)

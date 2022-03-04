@@ -61,11 +61,11 @@ for xlat in range(lai_obs.lat.size):
         
         if not np.isnan(sacksStart[xlat, ylon]):
             curStart = datetime.datetime.strptime('2020%d'%(round(sacksStart[xlat, ylon])+1), '%Y%j').date().month
-            sacksStart[xlat, ylon] = curStart
+            sacksStart[xlat, ylon] = curStart-1
             
         if not np.isnan(sacksEnd[xlat, ylon]):
             curEnd = datetime.datetime.strptime('2020%d'%(round(sacksEnd[xlat, ylon])+1), '%Y%j').date().month
-            sacksEnd[xlat, ylon] = curEnd
+            sacksEnd[xlat, ylon] = curEnd-1
         
         if ~np.isnan(sacksStart[xlat, ylon]) and ~np.isnan(sacksEnd[xlat, ylon]):
             ngrid += 1
@@ -101,8 +101,8 @@ for xlat in range(lai_obs.lat.size):
             if sacksStart[xlat, ylon] > sacksEnd[xlat, ylon]:
 
                 # start loop on 2nd year to allow for growing season that crosses jan 1
-                cur_lai_obs1 = lai_obs[cur_month(int(sacksEnd[xlat, ylon])):, xlat, ylon]
-                cur_lai_obs2 = lai_obs[:int(sacksStart[xlat, ylon]), xlat, ylon]
+                cur_lai_obs1 = lai_obs[cur_month(int(sacksStart[xlat, ylon])):, xlat, ylon]
+                cur_lai_obs2 = lai_obs[:int(sacksEnd[xlat, ylon]), xlat, ylon]
                 
                 cur_lai_obs = np.concatenate([cur_lai_obs1, cur_lai_obs2])
 
@@ -132,7 +132,7 @@ ds_grow_lai_mean = xr.Dataset()
 ds_grow_lai_mean['lai_grow_mean'] = da_grow_lai_mean
 
 print('saving netcdf...')
-ds_grow_lai_mean.to_netcdf('lai_data/lai_%s_grow_mean_global.nc'%(crop))
+ds_grow_lai_mean.to_netcdf('lai_data/lai_%s_grow_mean_global_fixed_sh.nc'%(crop))
 
 
 

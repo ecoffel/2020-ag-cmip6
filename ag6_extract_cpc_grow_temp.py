@@ -94,8 +94,8 @@ for xlat in range(cpc_temp_hist.lat.size):
 
             if sacksStart_regrid[xlat, ylon] > sacksEnd_regrid[xlat, ylon]:
 
-                curTemp1 = cpc_temp_hist_last_year[var][int(sacksEnd_regrid[xlat, ylon]):, xlat, ylon].values
-                curTemp2 = cpc_temp_hist[var][:int(sacksStart_regrid[xlat, ylon]), xlat, ylon].values
+                curTemp1 = cpc_temp_hist_last_year[var][int(sacksStart_regrid[xlat, ylon]):, xlat, ylon].values
+                curTemp2 = cpc_temp_hist[var][:int(sacksEnd_regrid[xlat, ylon]), xlat, ylon].values
 
                 curTemp = np.concatenate([curTemp1, curTemp2])
 
@@ -119,5 +119,5 @@ ds_grow_temp_mean = xr.Dataset()
 ds_grow_temp_mean['%s_grow_max'%var] = da_grow_temp_mean
 
 print('saving netcdf...')
-ds_grow_temp_mean.to_netcdf('cpc_output/cpc_%s_grow_max_%s_%d.nc'%(crop, region, year))
+ds_grow_temp_mean.to_netcdf('cpc_output/cpc_%s_grow_max_%s_%d_fixed_sh.nc'%(crop, region, year))
     

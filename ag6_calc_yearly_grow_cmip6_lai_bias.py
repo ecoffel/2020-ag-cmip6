@@ -30,10 +30,10 @@ cmip6_var = 'lai'
 era5_var = 'lai'
 
 print('loading regridded lai for %s'%model)
-cmip6_lai_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid.nc'%(crop, cmip6_var, model))
+cmip6_lai_grow = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_grow_%s_mon_global_%s_regrid_fixed_sh.nc'%(crop, cmip6_var, model))
 
 print('loading pre-computed era5...')
-era5_lai_grow_regrid = xr.open_dataset('era5/growing_season/era5_%s_%s_grow_regrid_%s.nc'%(crop, era5_var, region))
+era5_lai_grow_regrid = xr.open_dataset('era5/growing_season/era5_%s_%s_grow_regrid_%s_fixed_sh.nc'%(crop, era5_var, region))
 
 
 yearly_lai_grow_bias = np.full([len(range(1982, 2014+1)), \
@@ -49,5 +49,5 @@ for y, year in enumerate(range(1982, 2014+1)):
             yearly_lai_grow_bias[y, xlat, ylon] = cmip6_lai_grow['%s_grow_mean'%cmip6_var].values[y, xlat, ylon] - \
                                                         era5_lai_grow_regrid.lai_grow_mean.values[y, xlat, ylon]
 
-with open('cmip6_output/bias/yearly-cmip6-era5-%s-grow-bias-%s-%s.dat'%(era5_var, region, model), 'wb') as f:
+with open('cmip6_output/bias/yearly-cmip6-era5-%s-grow-bias-%s-%s-fixed-sh.dat'%(era5_var, region, model), 'wb') as f:
     pickle.dump(yearly_lai_grow_bias, f)

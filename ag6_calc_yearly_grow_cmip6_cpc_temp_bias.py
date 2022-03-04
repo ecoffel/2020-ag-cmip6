@@ -28,11 +28,11 @@ region = 'global'
 model = sys.argv[1]
 
 print('loading regridded tasmax for %s'%model)
-cmip6_tasmax_grow_max = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_tasmax_grow_max_%s_%s_regrid.nc'%(crop, region, model))
+cmip6_tasmax_grow_max = xr.open_dataset('cmip6_output/growing_season/cmip6_%s_tasmax_grow_max_%s_%s_regrid_fixed_sh.nc'%(crop, region, model))
 
 
 print('loading pre-computed cpc...')
-cpc_tasmax_grow_max_regrid = xr.open_dataset('cpc_output/cpc_%s_tasmax_grow_max_regrid_%s.nc'%(crop,region))
+cpc_tasmax_grow_max_regrid = xr.open_dataset('cpc_output/cpc_%s_tasmax_grow_max_regrid_%s_fixed_sh.nc'%(crop,region))
 
 yearly_tasmax_grow_max_bias = np.full([len(range(1981, 2014+1)), \
                                   cpc_tasmax_grow_max_regrid.lat.values.shape[0], \
@@ -47,5 +47,5 @@ for y, year in enumerate(range(1981, 2014+1)):
             yearly_tasmax_grow_max_bias[y, xlat, ylon] = cmip6_tasmax_grow_max.tasmax_grow_max.values[y, xlat, ylon] - \
                                                         cpc_tasmax_grow_max_regrid.tmax_grow_max.values[y, xlat, ylon]
 
-with open('cmip6_output/bias/yearly-cmip6-cpc-tasmax-grow-max-bias-%s-%s.dat'%(region, model), 'wb') as f:
+with open('cmip6_output/bias/yearly-cmip6-cpc-tasmax-grow-max-bias-%s-%s-fixed-sh.dat'%(region, model), 'wb') as f:
     pickle.dump(yearly_tasmax_grow_max_bias, f)

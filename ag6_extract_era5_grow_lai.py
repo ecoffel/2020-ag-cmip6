@@ -127,11 +127,11 @@ for xlat in range(lai_low_era5.lat.size):
         
         if not np.isnan(sacksStart[xlat, ylon]):
             curStart = datetime.datetime.strptime('2020%d'%(round(sacksStart[xlat, ylon])+1), '%Y%j').date().month
-            sacksStart[xlat, ylon] = curStart
+            sacksStart[xlat, ylon] = curStart-1
             
         if not np.isnan(sacksEnd[xlat, ylon]):
             curEnd = datetime.datetime.strptime('2020%d'%(round(sacksEnd[xlat, ylon])+1), '%Y%j').date().month
-            sacksEnd[xlat, ylon] = curEnd
+            sacksEnd[xlat, ylon] = curEnd-1
         
         if ~np.isnan(sacksStart[xlat, ylon]) and ~np.isnan(sacksEnd[xlat, ylon]):
             ngrid += 1
@@ -162,11 +162,11 @@ for xlat in range(lai_low_era5.lat.size):
             if sacksStart[xlat, ylon] > sacksEnd[xlat, ylon]:
 
                 # start loop on 2nd year to allow for growing season that crosses jan 1
-                cur_lai_low1 = lai_low_era5_last_year[orig_var1][int(sacksEnd[xlat, ylon]):, xlat, ylon]
-                cur_lai_low2 = lai_low_era5[orig_var1][:int(sacksStart[xlat, ylon]), xlat, ylon]
+                cur_lai_low1 = lai_low_era5_last_year[orig_var1][int(sacksStart[xlat, ylon]):, xlat, ylon]
+                cur_lai_low2 = lai_low_era5[orig_var1][:int(sacksEnd[xlat, ylon]), xlat, ylon]
                 
-                cur_lai_high1 = lai_high_era5_last_year[orig_var2][int(sacksEnd[xlat, ylon]):, xlat, ylon]
-                cur_lai_high2 = lai_high_era5[orig_var2][:int(sacksStart[xlat, ylon]), xlat, ylon]
+                cur_lai_high1 = lai_high_era5_last_year[orig_var2][int(sacksStart[xlat, ylon]):, xlat, ylon]
+                cur_lai_high2 = lai_high_era5[orig_var2][:int(sacksEnd[xlat, ylon]), xlat, ylon]
 
                 cur_lai_low = np.concatenate([cur_lai_low1, cur_lai_low2]) * era5_low_veg.cvl.values[xlat, ylon]
                 cur_lai_high = np.concatenate([cur_lai_high1, cur_lai_high2]) * era5_high_veg.cvh.values[xlat, ylon]
@@ -200,7 +200,7 @@ ds_grow_lai_mean = xr.Dataset()
 ds_grow_lai_mean['lai_grow_mean'] = da_grow_lai_mean
 
 print('saving netcdf...')
-ds_grow_lai_mean.to_netcdf('era5/growing_season/era5_%s_lai_grow_mean_global_%d.nc'%(crop, year))
+ds_grow_lai_mean.to_netcdf('era5/growing_season/era5_%s_lai_grow_mean_global_%d_fixed_sh.nc'%(crop, year))
 
 
 
@@ -213,7 +213,7 @@ ds_grow_lai_low = xr.Dataset()
 ds_grow_lai_low['lai_grow_mean'] = da_grow_lai_low
 
 print('saving netcdf...')
-ds_grow_lai_low.to_netcdf('era5/growing_season/era5_%s_lai_low_grow_mean_global_%d.nc'%(crop, year))
+ds_grow_lai_low.to_netcdf('era5/growing_season/era5_%s_lai_low_grow_mean_global_%d_fixed_sh.nc'%(crop, year))
 
 
 
@@ -227,4 +227,4 @@ ds_grow_lai_high = xr.Dataset()
 ds_grow_lai_high['lai_grow_mean'] = da_grow_lai_high
 
 print('saving netcdf...')
-ds_grow_lai_high.to_netcdf('era5/growing_season/era5_%s_lai_high_grow_mean_global_%d.nc'%(crop, year))
+ds_grow_lai_high.to_netcdf('era5/growing_season/era5_%s_lai_high_grow_mean_global_%d_fixed_sh.nc'%(crop, year))

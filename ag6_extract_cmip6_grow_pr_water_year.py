@@ -93,15 +93,14 @@ for xlat in range(cmip6_pr_hist.lat.size):
             if n % 100 == 0:
                 print('%.2f%%'%(n/ngrid*100))
 
-            if sacksStart_regrid[xlat, ylon] > sacksEnd_regrid[xlat, ylon]:
+            # nh, oct-sept
+            if cmip6_pr_hist.lat[xlat] > 0:
 
                 # start loop on 2nd year to allow for growing season that crosses jan 1
                 for y,year in enumerate(np.array(list(yearly_groups.keys()))[1:]):
 
-                    curPr1 = cmip6_pr_hist[var][np.array(yearly_groups[year-1])[int(sacksStart_regrid[xlat, ylon]):], xlat, ylon]
-                    curPr2 = cmip6_pr_hist[var][np.array(yearly_groups[year])[:int(sacksEnd_regrid[xlat, ylon])], xlat, ylon]
+                    curPr = cmip6_pr_hist[var].sel(time=slice('%d-10'%(year-1), '%d-09'%(year)))[:, xlat, ylon]
 
-                    curPr = np.concatenate([curPr1, curPr2])
 
                     if len(curPr) > 0:
                         yearly_grow_pr_mean[y, xlat, ylon] = np.nanmean(curPr)*60*60*24
@@ -109,11 +108,14 @@ for xlat in range(cmip6_pr_hist.lat.size):
 
 #                     cur_growingSeasonLen = (365-int(sacksStart_regrid[xlat, ylon])) + int(sacksEnd_regrid[xlat, ylon])
 
+            # nh, april-mar
             else:
 
-                for y,year in enumerate(np.array(list(yearly_groups.keys()))):
+                # start loop on 2nd year to allow for growing season that crosses jan 1
+                for y,year in enumerate(np.array(list(yearly_groups.keys()))[1:]):
 
-                    curPr = cmip6_pr_hist[var][np.array(yearly_groups[year])[int(sacksStart_regrid[xlat, ylon]):int(sacksEnd_regrid[xlat, ylon])], xlat, ylon]
+                    curPr = cmip6_pr_hist[var].sel(time=slice('%d-04'%(year-1), '%d-03'%(year)))[:, xlat, ylon]
+
                     if len(curPr) > 0:
                         yearly_grow_pr_mean[y, xlat, ylon] = np.nanmean(curPr)*60*60*24
                 n += 1
@@ -127,6 +129,6 @@ da_grow_pr_mean = xr.DataArray(data   = yearly_grow_pr_mean,
 ds_grow_pr_mean = xr.Dataset()
 ds_grow_pr_mean['%s_grow_mean'%var] = da_grow_pr_mean
 
-print('saving netcdf...')
-ds_grow_pr_mean.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_mean_%s_%s_fixed_sh.nc'%(crop, rcp, var, region, model))
+# print('saving netcdf...')
+ds_grow_pr_mean.to_netcdf('cmip6_output/growing_season/cmip6_%s_grow_%s_%s_mean_%s_water_year_%s.nc'%(crop, rcp, var, region, model))
     

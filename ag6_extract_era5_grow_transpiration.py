@@ -13,7 +13,7 @@ import datetime
 dirERA5Land = '/home/edcoffel/drive/MAX-Filer/Research/Climate-02/Data-02-edcoffel-F20/ERA5-Land'
 dirSacks = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Personal-F20/edcoffel-F20/data/projects/ag-land-climate'
 
-file_var = 'transpiration_new'
+file_var = 'transpiration'
 orig_var = 'evabs'
 crop = 'Maize'
 
@@ -42,11 +42,11 @@ n = 0
 
 # LOAD 1 YEAR OF ERA5 DATA
 print('opening era5 %d...'%year)
-trans_era5 = xr.open_dataset('%s/monthly/%s_monthly_%d.nc'%(dirERA5Land, file_var, year))
+trans_era5 = xr.open_dataset('%s/monthly/%s_%d.nc'%(dirERA5Land, file_var, year))
 trans_era5.load()
 
 print('opening era5 %d...'%(year-1))
-trans_era5_last_year = xr.open_dataset('%s/monthly/%s_monthly_%d.nc'%(dirERA5Land, file_var, year-1))
+trans_era5_last_year = xr.open_dataset('%s/monthly/%s_%d.nc'%(dirERA5Land, file_var, year-1))
 trans_era5_last_year.load()
 
 trans_era5 = trans_era5.rename_dims(latitude='lat', longitude='lon')
@@ -73,11 +73,13 @@ for xlat in range(trans_era5.lat.size):
         
         if not np.isnan(sacksStart[xlat, ylon]):
             curStart = datetime.datetime.strptime('2020%d'%(round(sacksStart[xlat, ylon])+1), '%Y%j').date().month
-            sacksStart[xlat, ylon] = curStart
+            # subtract 1 to convert month into array index
+            sacksStart[xlat, ylon] = curStart-1
             
         if not np.isnan(sacksEnd[xlat, ylon]):
             curEnd = datetime.datetime.strptime('2020%d'%(round(sacksEnd[xlat, ylon])+1), '%Y%j').date().month
-            sacksEnd[xlat, ylon] = curEnd
+            # subtract 1 to convert month into array index
+            sacksEnd[xlat, ylon] = curEnd-1
         
         if ~np.isnan(sacksStart[xlat, ylon]) and ~np.isnan(sacksEnd[xlat, ylon]):
             ngrid += 1
@@ -106,9 +108,9 @@ for xlat in range(trans_era5.lat.size):
             # SOUTHERN HEMISPHERE - NEED 2 YEARS OF ERA5 DATA (this year and last year)
             if sacksStart[xlat, ylon] > sacksEnd[xlat, ylon]:
 
-                # start loop on 2nd year to allow for growing season that crosses jan 1
-                curTrans1 = trans_era5_last_year[orig_var][int(sacksEnd[xlat, ylon]):, xlat, ylon]
-                curTrans2 = trans_era5[orig_var][:int(sacksStart[xlat, ylon]), xlat, ylon]
+                # start loop on 2nd year to allow for growing season that crosses jan 1                
+                curTrans1 = trans_era5_last_year[orig_var][int(sacksStart[xlat, ylon]):, xlat, ylon]
+                curTrans2 = trans_era5[orig_var][:int(sacksEnd[xlat, ylon]), xlat, ylon]
 
                 curTrans = np.concatenate([curTrans1, curTrans2])
 
@@ -137,4 +139,4 @@ ds_grow_trans_mean = xr.Dataset()
 ds_grow_trans_mean['trans_grow_mean'] = da_grow_trans_mean
 
 print('saving netcdf...')
-ds_grow_trans_mean.to_netcdf('era5/growing_season/era5_%s_trans_grow_mean_global_%d.nc'%(crop, year))
+ds_grow_trans_mean.to_netcdf('era5/growing_season/era5_%s_trans_grow_mean_global_%d_fixed_sh.nc'%(crop, year))

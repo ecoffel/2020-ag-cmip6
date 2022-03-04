@@ -75,46 +75,45 @@ for xlat in range(pr_era5.lat.size):
 
 
 yearly_grow_pr_mean = np.full([pr_era5.lat.size, pr_era5.lon.size], np.nan)
-            
-            
+
+nh_wy_start = int(datetime.datetime.strptime('%d%d'%(year-1, 10), '%Y%m').strftime('%j'))
+nh_wy_end = int(datetime.datetime.strptime('%d%d'%(year, 9), '%Y%m').strftime('%j'))
+
+sh_wy_start = int(datetime.datetime.strptime('%d%d'%(year-1, 4), '%Y%m').strftime('%j'))
+sh_wy_end = int(datetime.datetime.strptime('%d%d'%(year, 3), '%Y%m').strftime('%j'))
+sys.exit()
 # THIS LOOPS OVER EVERY GRID CELL OF ERA5 AND EXTRACTS DAILY ERA5 DATA THAT FALLS WITHIN THE SACKS GROWING SEASON
 # latitude loop
 for xlat in range(pr_era5.lat.size):
     # longitude loop
     for ylon in range(pr_era5.lon.size):
 
-        # if sacks calendar is defined at this grid cell
-        if ~np.isnan(sacksStart_regrid[xlat, ylon]) and ~np.isnan(sacksEnd_regrid[xlat, ylon]):
-    
-            # just print out our progress
-            if n % 1000 == 0:
-                print('%.2f%%'%(n/ngrid*100))
+        if np.isnan(sacksStart_regrid[xlat, ylon]):
+            continue
+        
+        # just print out our progress
+        if n % 1000 == 0:
+            print('%.2f%%'%(n/ngrid*100))
 
-            # there are 2 possibilities - that the planting date is before the harvest date in the current year (northern hemisphere), 
-            # or that the planting date is late in the year and the harvest date is in the beginning of the next year (southern hemisphere)
-            # we need to handle these two cases separately
+        #NH - water year is oct - sept
+        if pr_era5.lat[xlat] > 0:
             
-            # SOUTHERN HEMISPHERE - NEED 2 YEARS OF ERA5 DATA (this year and last year)
-            if sacksStart_regrid[xlat, ylon] > sacksEnd_regrid[xlat, ylon]:
+            curPr1 = pr_era5_last_year[orig_var][nh_wy_start:, xlat, ylon]
+            curPr2 = pr_era5[orig_var][:nh_wy_end, xlat, ylon]
+        
+        # SH  water year is apr - mar
+        elif pr_era5.lat[xlat] < 0:
+        
+            curPr1 = pr_era5_last_year[orig_var][sh_wy_start:, xlat, ylon]
+            curPr2 = pr_era5[orig_var][:sh_wy_end, xlat, ylon]
+        
+        
+        curPr = np.concatenate([curPr1, curPr2])
 
-                # start loop on 2nd year to allow for growing season that crosses jan 1
-                curPr1 = pr_era5_last_year[orig_var][int(sacksStart_regrid[xlat, ylon]):, xlat, ylon]
-                curPr2 = pr_era5[orig_var][:int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]
-
-                curPr = np.concatenate([curPr1, curPr2])
-
-                if len(curPr) > 0:
-                    yearly_grow_pr_mean[xlat, ylon] = np.nanmean(curPr)
-                n += 1
+        if len(curPr) > 0:
+            yearly_grow_pr_mean[xlat, ylon] = np.nanmean(curPr)
+        n += 1
                 
-
-            # NORTHERN HEMISPHERE - SIMPLER, JUST NEED 1 YEAR OF ERA5
-            else:
-                curPr = pr_era5[orig_var][int(sacksStart_regrid[xlat, ylon]):int(sacksEnd_regrid[xlat, ylon]), xlat, ylon]
-                if len(curPr) > 0:
-                    yearly_grow_pr_mean[xlat, ylon] = np.nanmean(curPr)
-                n += 1
-
 print('renaming dims...')
 
 # SAVE THE EXTRACTED TEMP DATA
@@ -127,4 +126,4 @@ ds_grow_pr_mean = xr.Dataset()
 ds_grow_pr_mean['pr_grow_mean'] = da_grow_pr_mean
 
 print('saving netcdf...')
-ds_grow_pr_mean.to_netcdf('era5/growing_season/era5_%s_pr_grow_mean_global_%d_fixed_sh.nc'%(crop, year))
+ds_grow_pr_mean.to_netcdf('era5/growing_season/era5_%s_pr_grow_mean_global_water_year_%d.nc'%(crop, year))

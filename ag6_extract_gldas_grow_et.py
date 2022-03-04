@@ -11,7 +11,7 @@ import sys
 import datetime
 
 
-gldas_model = 'VIC'
+gldas_model = 'NOAH'
 
 if gldas_model == 'NOAH':
     dirGLDAS = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Data-edcoffel-F20/GLDAS/noah-2-10'
@@ -21,7 +21,7 @@ else:
 dirSacks = '/home/edcoffel/drive/MAX-Filer/Research/Climate-01/Personal-F20/edcoffel-F20/data/projects/ag-land-climate'
 
 # transpiration: Tveg_tavg (NOAH) or TVeg_tavg (VIC), soil evap: ESoil_tavg, canopy evap: ECanop_tavg, et: Evap_tavg 
-orig_var = 'TVeg_tavg'
+orig_var = 'Tveg_tavg'
 crop = 'Maize'
 
 year = int(sys.argv[1])
@@ -87,11 +87,11 @@ for xlat in range(gldas.lat.size):
         
         if not np.isnan(sacksStart[xlat, ylon]):
             curStart = datetime.datetime.strptime('2020%d'%(round(sacksStart[xlat, ylon])+1), '%Y%j').date().month
-            sacksStart[xlat, ylon] = curStart
+            sacksStart[xlat, ylon] = curStart-1
             
         if not np.isnan(sacksEnd[xlat, ylon]):
             curEnd = datetime.datetime.strptime('2020%d'%(round(sacksEnd[xlat, ylon])+1), '%Y%j').date().month
-            sacksEnd[xlat, ylon] = curEnd
+            sacksEnd[xlat, ylon] = curEnd-1
         
         if ~np.isnan(sacksStart[xlat, ylon]) and ~np.isnan(sacksEnd[xlat, ylon]):
             ngrid += 1
@@ -121,8 +121,8 @@ for xlat in range(gldas.lat.size):
             if sacksStart[xlat, ylon] > sacksEnd[xlat, ylon]:
 
                 # start loop on 2nd year to allow for growing season that crosses jan 1
-                curVar1 = gldas_last_year[int(sacksEnd[xlat, ylon]):, xlat, ylon].values
-                curVar2 = gldas[:int(sacksStart[xlat, ylon]), xlat, ylon].values
+                curVar1 = gldas_last_year[int(sacksStart[xlat, ylon]):, xlat, ylon].values
+                curVar2 = gldas[:int(sacksEnd[xlat, ylon]), xlat, ylon].values
 
                 curVar = np.concatenate([curVar1, curVar2])
 
@@ -151,4 +151,4 @@ ds_grow_mean = xr.Dataset()
 ds_grow_mean['evap_grow_mean'] = da_grow_mean
 
 print('saving netcdf...')
-ds_grow_mean.to_netcdf('gldas_output/gldas-%s_%s_%s_%s_grow_mean_global_%d.nc'%(gldas_model, orig_var, crop, orig_var, year))
+ds_grow_mean.to_netcdf('gldas_output/gldas-%s_%s_%s_%s_grow_mean_global_%d_fixed_sh.nc'%(gldas_model, orig_var, crop, orig_var, year))
