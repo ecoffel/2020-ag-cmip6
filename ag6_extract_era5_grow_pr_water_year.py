@@ -81,7 +81,7 @@ nh_wy_end = int(datetime.datetime.strptime('%d%d'%(year, 9), '%Y%m').strftime('%
 
 sh_wy_start = int(datetime.datetime.strptime('%d%d'%(year-1, 4), '%Y%m').strftime('%j'))
 sh_wy_end = int(datetime.datetime.strptime('%d%d'%(year, 3), '%Y%m').strftime('%j'))
-sys.exit()
+
 # THIS LOOPS OVER EVERY GRID CELL OF ERA5 AND EXTRACTS DAILY ERA5 DATA THAT FALLS WITHIN THE SACKS GROWING SEASON
 # latitude loop
 for xlat in range(pr_era5.lat.size):
