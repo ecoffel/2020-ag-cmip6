@@ -93,13 +93,13 @@ for xlat in range(cmip6_pr_hist.lat.size):
             if n % 100 == 0:
                 print('%.2f%%'%(n/ngrid*100))
 
-            # nh, oct-sept
+            # nh, july-june
             if cmip6_pr_hist.lat[xlat] > 0:
 
                 # start loop on 2nd year to allow for growing season that crosses jan 1
                 for y,year in enumerate(np.array(list(yearly_groups.keys()))[1:]):
 
-                    curPr = cmip6_pr_hist[var].sel(time=slice('%d-10'%(year-1), '%d-09'%(year)))[:, xlat, ylon]
+                    curPr = cmip6_pr_hist[var].sel(time=slice('%d-07'%(year-1), '%d-06'%(year)))[:, xlat, ylon]
 
 
                     if len(curPr) > 0:

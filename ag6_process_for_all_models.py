@@ -26,7 +26,7 @@ for m, model in enumerate(cmip6_models):
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_gldas_et_bias.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_ef_bias.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_pr_bias.py %s'%(model))
-    os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_gpcp_pr_bias.py %s'%(model))
+#     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_gpcp_pr_bias.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_tran_bias.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_lai_bias.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_yearly_grow_cmip6_lai_obs_bias.py %s'%(model))
@@ -38,7 +38,7 @@ for m, model in enumerate(cmip6_models):
 
 #     os.system('screen -d -m ipython ag6_extract_cmip6_grow_temp.py %s r1i1p1f1'%(model))
 #     os.system('screen -d -m ipython ag6_extract_cmip6_grow_pr.py %s r1i1p1f1'%(model))
-#     os.system('screen -d -m ipython ag6_extract_cmip6_grow_pr_water_year.py %s'%(model))
+    os.system('screen -d -m ipython ag6_extract_cmip6_grow_pr_water_year.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_cmip6_ef_grow.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_cmip6_ef_grow_mon.py %s'%(model))
 #     os.system('screen -d -m ipython ag6_calc_cmip6_lai_grow_mon.py %s'%(model))

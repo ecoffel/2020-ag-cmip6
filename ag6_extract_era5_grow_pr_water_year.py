@@ -79,8 +79,8 @@ yearly_grow_pr_mean = np.full([pr_era5.lat.size, pr_era5.lon.size], np.nan)
 nh_wy_start = int(datetime.datetime.strptime('%d%d'%(year-1, 10), '%Y%m').strftime('%j'))
 nh_wy_end = int(datetime.datetime.strptime('%d%d'%(year, 9), '%Y%m').strftime('%j'))
 
-sh_wy_start = int(datetime.datetime.strptime('%d%d'%(year-1, 4), '%Y%m').strftime('%j'))
-sh_wy_end = int(datetime.datetime.strptime('%d%d'%(year, 3), '%Y%m').strftime('%j'))
+sh_wy_start = int(datetime.datetime.strptime('%d%d'%(year-1, 7), '%Y%m').strftime('%j'))
+sh_wy_end = int(datetime.datetime.strptime('%d%d'%(year, 6), '%Y%m').strftime('%j'))
 
 # THIS LOOPS OVER EVERY GRID CELL OF ERA5 AND EXTRACTS DAILY ERA5 DATA THAT FALLS WITHIN THE SACKS GROWING SEASON
 # latitude loop
@@ -101,7 +101,7 @@ for xlat in range(pr_era5.lat.size):
             curPr1 = pr_era5_last_year[orig_var][nh_wy_start:, xlat, ylon]
             curPr2 = pr_era5[orig_var][:nh_wy_end, xlat, ylon]
         
-        # SH  water year is apr - mar
+        # SH  water year is july - june
         elif pr_era5.lat[xlat] < 0:
         
             curPr1 = pr_era5_last_year[orig_var][sh_wy_start:, xlat, ylon]
